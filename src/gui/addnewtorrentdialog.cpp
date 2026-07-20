@@ -329,7 +329,7 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
     m_filterLine->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_filterLine->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_filterLine, &QWidget::customContextMenuRequested, this, &AddNewTorrentDialog::showContentFilterContextMenu);
-    m_ui->contentFilterLayout->insertWidget(3, m_filterLine);
+    m_ui->contentFilterLayout->addWidget(m_filterLine);
     const auto *focusSearchHotkey = new QShortcut(QKeySequence::Find, this);
     connect(focusSearchHotkey, &QShortcut::activated, this, [this]()
     {
