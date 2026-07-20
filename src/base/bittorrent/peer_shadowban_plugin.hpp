@@ -3,6 +3,7 @@
 #include <QString>
 #include <libtorrent/extensions.hpp>
 #include <libtorrent/peer_connection_handle.hpp>
+#include <libtorrent/version.hpp>
 
 #if (LIBTORRENT_VERSION_NUM >= 20000)
 using client_data = lt::client_data_t;

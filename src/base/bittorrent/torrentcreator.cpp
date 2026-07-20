@@ -35,6 +35,7 @@
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/file_storage.hpp>
 #include <libtorrent/torrent_info.hpp>
+#include <libtorrent/version.hpp>
 
 #include <QtSystemDetection>
 #include <QDirIterator>
