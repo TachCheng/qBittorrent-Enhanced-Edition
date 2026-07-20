@@ -352,6 +352,10 @@ int TorrentCreator::calculateTotalPieces(const Path &inputPath, const int pieceS
     if (inputPath.isEmpty())
         return 0;
 
+#if LIBTORRENT_VERSION_NUM >= 20100
+    std::vector<lt::create_file_entry> fs = lt::list_files(inputPath.toString().toStdString(), fileFilter);
+    return lt::create_torrent {fs, pieceSize, toNativeTorrentFormatFlag(torrentFormat)}.num_pieces();
+#else
     lt::file_storage fs;
     lt::add_files(fs, inputPath.toString().toStdString(), fileFilter);
 
@@ -360,5 +364,6 @@ int TorrentCreator::calculateTotalPieces(const Path &inputPath, const int pieceS
 #else
     return lt::create_torrent(fs, pieceSize, paddedFileSizeLimit
         , (isAlignmentOptimized ? lt::create_torrent::optimize_alignment : lt::create_flags_t {})).num_pieces();
+#endif
 #endif
 }
