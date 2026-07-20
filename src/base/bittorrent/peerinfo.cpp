@@ -96,7 +96,11 @@ bool PeerInfo::isSupportsExtensions() const
 
 bool PeerInfo::isLocalConnection() const
 {
+#if defined(QBT_USES_LIBTORRENT2)
+    return static_cast<bool>(m_nativeInfo.flags & lt::peer_info::outgoing_connection);
+#else
     return static_cast<bool>(m_nativeInfo.flags & lt::peer_info::local_connection);
+#endif
 }
 
 bool PeerInfo::isHandshake() const
@@ -187,8 +191,13 @@ PeerAddress PeerInfo::address() const
     if (useI2PSocket())
         return {};
 
+#if LIBTORRENT_VERSION_NUM >= 20100
+    const lt::tcp::endpoint ip = m_nativeInfo.remote_endpoint();
+#else
+    const lt::tcp::endpoint &ip = m_nativeInfo.ip;
+#endif
     // fast path for platforms which boost.asio internal struct maps to `sockaddr`
-    return {QHostAddress(m_nativeInfo.ip.data()), m_nativeInfo.ip.port()};
+    return {QHostAddress(ip.data()), ip.port()};
     // slow path for the others
     //return {QHostAddress(QString::fromStdString(m_nativeInfo.ip.address().to_string()))
     //    , m_nativeInfo.ip.port()};
