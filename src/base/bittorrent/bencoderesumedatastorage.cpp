@@ -32,6 +32,7 @@
 #include <libtorrent/entry.hpp>
 #include <libtorrent/read_resume_data.hpp>
 #include <libtorrent/torrent_info.hpp>
+#include <libtorrent/version.hpp>
 #if LIBTORRENT_VERSION_NUM >= 20100
 #include <libtorrent/load_torrent.hpp>
 #endif
