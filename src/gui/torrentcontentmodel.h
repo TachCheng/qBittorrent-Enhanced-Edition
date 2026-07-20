@@ -66,6 +66,8 @@ public:
     BitTorrent::TorrentContentHandler *contentHandler() const;
 
     void refresh();
+    void selectMaxMp4();
+    void select200MB();
 
     QList<BitTorrent::DownloadPriority> getFilePriorities() const;
     TorrentContentModelItem::ItemType itemType(const QModelIndex &index) const;

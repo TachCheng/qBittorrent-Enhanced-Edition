@@ -639,6 +639,75 @@ BitTorrent::TorrentContentHandler *TorrentContentModel::contentHandler() const
     return m_contentHandler;
 }
 
+void TorrentContentModel::selectMaxMp4()
+{
+    if (!m_contentHandler || !m_contentHandler->hasMetadata() || m_filesIndex.isEmpty())
+        return;
+
+    TorrentContentModelFile *maxMp4File = nullptr;
+    qulonglong maxSize = 0;
+
+    for (TorrentContentModelFile *file : m_filesIndex)
+    {
+        if (file->name().endsWith(u".mp4", Qt::CaseInsensitive))
+        {
+            if (file->size() > maxSize)
+            {
+                maxSize = file->size();
+                maxMp4File = file;
+            }
+        }
+    }
+
+    for (TorrentContentModelFile *file : m_filesIndex)
+    {
+        if (file == maxMp4File)
+            file->setPriority(BitTorrent::DownloadPriority::Normal);
+        else
+            file->setPriority(BitTorrent::DownloadPriority::Ignored);
+    }
+
+    m_contentHandler->prioritizeFiles(getFilePriorities());
+
+    m_rootItem->recalculateProgress();
+    m_rootItem->recalculateAvailability();
+
+    const QList<ColumnInterval> columns =
+    {
+        {TorrentContentModelItem::COL_NAME, TorrentContentModelItem::COL_NAME},
+        {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
+    };
+    notifySubtreeUpdated(index(0, 0), columns);
+}
+
+void TorrentContentModel::select200MB()
+{
+    if (!m_contentHandler || !m_contentHandler->hasMetadata() || m_filesIndex.isEmpty())
+        return;
+
+    const qulonglong minSize = 200ULL * 1024ULL * 1024ULL; // 200 MB in bytes
+
+    for (TorrentContentModelFile *file : m_filesIndex)
+    {
+        if (file->name().endsWith(u".mp4", Qt::CaseInsensitive) && (file->size() > minSize))
+            file->setPriority(BitTorrent::DownloadPriority::Normal);
+        else
+            file->setPriority(BitTorrent::DownloadPriority::Ignored);
+    }
+
+    m_contentHandler->prioritizeFiles(getFilePriorities());
+
+    m_rootItem->recalculateProgress();
+    m_rootItem->recalculateAvailability();
+
+    const QList<ColumnInterval> columns =
+    {
+        {TorrentContentModelItem::COL_NAME, TorrentContentModelItem::COL_NAME},
+        {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
+    };
+    notifySubtreeUpdated(index(0, 0), columns);
+}
+
 void TorrentContentModel::refresh()
 {
     if (!m_contentHandler || !m_contentHandler->hasMetadata())

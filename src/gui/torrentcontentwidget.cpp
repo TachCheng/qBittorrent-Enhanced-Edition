@@ -225,6 +225,16 @@ void TorrentContentWidget::checkNone()
         model()->setData(model()->index(i, TorrentContentModelItem::COL_NAME), Qt::Unchecked, Qt::CheckStateRole);
 }
 
+void TorrentContentWidget::selectMaxMp4()
+{
+    m_model->selectMaxMp4();
+}
+
+void TorrentContentWidget::select200MB()
+{
+    m_model->select200MB();
+}
+
 void TorrentContentWidget::setContentDragAllowed(const bool allowed)
 {
     m_contentDragAllowed = allowed;

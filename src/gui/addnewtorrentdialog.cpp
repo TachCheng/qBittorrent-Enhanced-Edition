@@ -376,6 +376,8 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
     connect(m_filterLine, &LineEdit::textChanged, this, &AddNewTorrentDialog::setContentFilterPattern);
     connect(m_ui->buttonSelectAll, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::checkAll);
     connect(m_ui->buttonSelectNone, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::checkNone);
+    connect(m_ui->buttonSelectMaxMp4, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::selectMaxMp4);
+    connect(m_ui->buttonSelect200MB, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::select200MB);
     connect(Preferences::instance(), &Preferences::changed, this, []
     {
         const int length = Preferences::instance()->addNewTorrentDialogSavePathHistoryLength();

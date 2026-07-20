@@ -516,6 +516,20 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="buttonSelectMaxMp4">
+               <property name="text">
+                <string>Max MP4</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonSelect200MB">
+               <property name="text">
+                <string>200MB</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="horizontalSpacer_6">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>

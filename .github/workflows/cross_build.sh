@@ -180,7 +180,7 @@ prepare_ninja() {
 
 prepare_zlib() {
   if [ x"${USE_ZLIB_NG}" = x"1" ]; then
-    zlib_ng_latest_tag="$(retry curl -ksSL --compressed https://api.github.com/repos/zlib-ng/zlib-ng/releases \| jq -r "'.[0].tag_name'")"
+    zlib_ng_latest_tag="$(retry curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/zlib-ng/zlib-ng/releases/latest \| sed "'s@.*/@@'")"
     zlib_ng_latest_url="https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${zlib_ng_latest_tag}.tar.gz"
     echo "zlib-ng version ${zlib_ng_latest_tag}"
     if [ x"${USE_CHINA_MIRROR}" = x1 ]; then

@@ -97,6 +97,8 @@ public:
 
     void checkAll();
     void checkNone();
+    void selectMaxMp4();
+    void select200MB();
 
     void setContentDragAllowed(bool allowed);
     void setContentDragEnabled(bool enabled);
