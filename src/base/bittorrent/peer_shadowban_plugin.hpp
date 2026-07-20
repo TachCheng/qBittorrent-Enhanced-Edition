@@ -45,7 +45,11 @@ protected:
         lt::peer_info info;
         m_peer_connection.get_peer_info(info);
 
+#if LIBTORRENT_VERSION_NUM >= 20100
+        QString peer_ip = QString::fromStdString(info.remote_endpoint().address().to_string());
+#else
         QString peer_ip = QString::fromStdString(info.ip.address().to_string());
+#endif
         QStringList shadowbannedIPs =
             CachedSettingValue<QStringList>(u"State/ShadowBannedIPs"_s, QStringList(), Algorithm::sorted<QStringList>).get();
 

@@ -116,6 +116,74 @@ void TorrentCreator::run()
         const Utils::Compare::NaturalLessThan<Qt::CaseInsensitive> naturalLessThan {};
 
         // Adding files to the torrent
+#if LIBTORRENT_VERSION_NUM >= 20100
+        std::vector<lt::create_file_entry> fs;
+        if (QFileInfo(m_params.sourcePath.data()).isFile())
+        {
+            fs = lt::list_files(m_params.sourcePath.toString().toStdString(), fileFilter);
+        }
+        else
+        {
+            // need to sort the file names by natural sort order
+            QStringList dirs = {m_params.sourcePath.data()};
+
+            QDirIterator dirIter {m_params.sourcePath.data(), (QDir::AllDirs | QDir::NoDotAndDotDot), QDirIterator::Subdirectories};
+            while (dirIter.hasNext())
+            {
+                const QFileInfo dirInfo = dirIter.nextFileInfo();
+
+#ifdef Q_OS_WIN
+                // .lnk to directory
+                // Windows users do not expect torrent creator to traverse into .lnk files so skip over them
+                if (dirInfo.isShortcut())
+                    continue;
+#endif
+
+                const QString dirPath = dirInfo.filePath();
+                dirs.append(dirPath);
+            }
+            std::ranges::sort(dirs, naturalLessThan);
+
+            QStringList fileNames;
+            QHash<QString, qint64> fileSizeMap;
+
+            for (const QString &dir : asConst(dirs))
+            {
+                QStringList tmpNames;  // natural sort files within each dir
+
+                QDirIterator fileIter {dir, QDir::Files};
+                while (fileIter.hasNext())
+                {
+                    const QFileInfo fileInfo = fileIter.nextFileInfo();
+                    const Path filePath {fileInfo.filePath()};
+                    qint64 fileSize = fileInfo.size();
+
+#ifdef Q_OS_WIN
+                    // .lnk to file
+                    // libtorrent couldn't handle .lnk files on Windows
+                    if (fileInfo.isShortcut())
+                        continue;
+
+                    // file symbolic link
+                    // QFileInfo::size() failed to return the target file size
+                    // and we need to redirect it manually
+                    if (fileInfo.isSymbolicLink())
+                        fileSize = QFileInfo(fileInfo.symLinkTarget()).size();
+#endif
+
+                    const Path relFilePath = parentPath.relativePathOf(filePath);
+                    tmpNames.append(relFilePath.toString());
+                    fileSizeMap[tmpNames.last()] = fileSize;
+                }
+
+                std::ranges::sort(tmpNames, naturalLessThan);
+                fileNames += tmpNames;
+            }
+
+            for (const QString &fileName : asConst(fileNames))
+                fs.push_back(lt::create_file_entry(fileName.toStdString(), fileSizeMap[fileName]));
+        }
+#else
         lt::file_storage fs;
         if (QFileInfo(m_params.sourcePath.data()).isFile())
         {
@@ -182,6 +250,7 @@ void TorrentCreator::run()
             for (const QString &fileName : asConst(fileNames))
                 fs.add_file(fileName.toStdString(), fileSizeMap[fileName]);
         }
+#endif
 
         checkInterruptionRequested();
 
