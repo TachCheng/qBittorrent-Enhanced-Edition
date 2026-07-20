@@ -1,6 +1,6 @@
 name: CI - Windows
 
-on: [pull_request, push]
+on: [pull_request, push, workflow_dispatch]
 
 permissions: {}
 
@@ -20,6 +20,10 @@ jobs:
       matrix:
         libtorrent:
           - version: "2.0.11"
+            boost_major_version: "1"
+            boost_minor_version: "90"
+            boost_patch_version: "0"
+          - version: "2.1.0"
             boost_major_version: "1"
             boost_minor_version: "90"
             boost_patch_version: "0"
