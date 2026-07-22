@@ -342,6 +342,11 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
 
     loadState();
 
+    resize(1300, 750);
+    m_ui->splitter->setSizes({950, 300});
+    m_ui->splitter->setStretchFactor(0, 3);
+    m_ui->splitter->setStretchFactor(1, 1);
+
     if (const QByteArray state = m_storeTreeHeaderState; !state.isEmpty())
         m_ui->contentTreeView->header()->restoreState(state);
     // Hide useless columns after loading the header state

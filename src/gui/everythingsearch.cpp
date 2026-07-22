@@ -94,7 +94,7 @@ void EverythingSearch::search(const QString &query)
     queryStruct->max_results = 200;
     queryStruct->offset = 0;
     queryStruct->reply_hwnd = static_cast<DWORD>(static_cast<uintptr_t>(winId()));
-    queryStruct->reply_copydata_message = 0;
+    queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LIST2W;
     queryStruct->search_flags = 0;
     queryStruct->request_flags = EVERYTHING_IPC_QUERY2_REQUEST_NAME
                                 | EVERYTHING_IPC_QUERY2_REQUEST_PATH
@@ -125,7 +125,7 @@ bool EverythingSearch::nativeEvent(const QByteArray &eventType, void *message, q
     if (msg->message == WM_COPYDATA)
     {
         const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(msg->lParam);
-        if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W)
+        if (cds && (cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W || cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2))
         {
             const auto *list = static_cast<const EVERYTHING_IPC_LIST2W *>(cds->lpData);
             QList<EverythingItem> results;
