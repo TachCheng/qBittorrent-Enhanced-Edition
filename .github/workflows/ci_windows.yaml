@@ -180,19 +180,25 @@ jobs:
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          Write-Host "All files in build directory:"
-          Get-ChildItem -Path build -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) ($($_.Length) bytes)" }
-          $exeFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Extension -eq ".exe" -and $_.Name -notlike "test*" } | Select-Object -First 1
-          if ($exeFile) {
-              Write-Host "Selected main executable: $($exeFile.FullName) (Size: $($exeFile.Length) bytes)"
-              Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
+          # Target executable from RUNTIME_OUTPUT_DIRECTORY
+          $exePath = "build/qbittorrent.exe"
+          if (-not (Test-Path $exePath)) {
+              $found = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.exe" } | Select-Object -First 1
+              if ($found) { $exePath = $found.FullName }
+          }
+          if (Test-Path $exePath) {
+              Write-Host "Selected main qBittorrent executable: $exePath"
+              Copy-Item $exePath -Destination upload/qBittorrent/qbittorrent.exe -Force
           } else {
-              Write-Error "Main executable (non-test exe) was not found in build directory!"
+              Write-Error "qbittorrent.exe not found in build directory!"
           }
-          $pdbFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Extension -eq ".pdb" -and $_.Name -notlike "test*" } | Select-Object -First 1
-          if ($pdbFile) {
-              Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
+
+          $pdbPath = "build/qbittorrent.pdb"
+          if (Test-Path $pdbPath) {
+              Copy-Item $pdbPath -Destination upload/qBittorrent/qbittorrent.pdb -Force
           }
+          copy dist/windows/qt.conf upload/qBittorrent
+
           # Run windeployqt to automatically deploy all required Qt DLLs, plugins and translations
           & "${{ env.Qt_ROOT_DIR }}/bin/windeployqt.exe" --no-compiler-runtime --verbose 1 upload/qBittorrent/qbittorrent.exe
 
