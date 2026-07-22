@@ -125,7 +125,7 @@ bool EverythingSearch::nativeEvent(const QByteArray &eventType, void *message, q
     if (msg->message == WM_COPYDATA)
     {
         const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(msg->lParam);
-        if (cds && (cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W || cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2))
+        if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W)
         {
             const auto *list = static_cast<const EVERYTHING_IPC_LIST2W *>(cds->lpData);
             QList<EverythingItem> results;
