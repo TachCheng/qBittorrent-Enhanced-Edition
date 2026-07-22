@@ -182,36 +182,9 @@ jobs:
           if ($pdbFile) {
               Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
           }
-          copy dist/windows/qt.conf upload/qBittorrent
-          # runtimes
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Core.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Gui.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Network.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Sql.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Svg.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Widgets.dll" upload/qBittorrent
-          copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Xml.dll" upload/qBittorrent
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/iconengines | Out-Null
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/iconengines/qsvgicon.dll" upload/qBittorrent/plugins/iconengines
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/imageformats | Out-Null
-          # include all imageformats dlls since CI (dev) build links dynamically
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qgif.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qicns.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qico.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qjpeg.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qsvg.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qtga.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qtiff.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qwbmp.dll" upload/qBittorrent/plugins/imageformats
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/imageformats/qwebp.dll" upload/qBittorrent/plugins/imageformats
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/platforms | Out-Null
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/platforms/qwindows.dll" upload/qBittorrent/plugins/platforms
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/sqldrivers | Out-Null
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/sqldrivers/qsqlite.dll" upload/qBittorrent/plugins/sqldrivers
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/styles | Out-Null
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/styles/qmodernwindowsstyle.dll" upload/qBittorrent/plugins/styles
-          New-Item -ItemType Directory -Force upload/qBittorrent/plugins/tls | Out-Null
-          copy "${{ env.Qt_ROOT_DIR }}/plugins/tls/qschannelbackend.dll" upload/qBittorrent/plugins/tls
+          # Run windeployqt to automatically deploy all required Qt DLLs, plugins and translations
+          & "${{ env.Qt_ROOT_DIR }}/bin/windeployqt.exe" --no-compiler-runtime --verbose 1 upload/qBittorrent/qbittorrent.exe
+
           # cmake additionals
           New-Item -ItemType Directory -Force upload/cmake | Out-Null
           copy build/compile_commands.json upload/cmake
