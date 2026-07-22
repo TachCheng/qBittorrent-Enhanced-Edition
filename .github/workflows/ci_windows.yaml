@@ -61,7 +61,15 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', (process.env.ACTIONS_CACHE_URL || ''));
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', (process.env.ACTIONS_RUNTIME_TOKEN || ''));
 
+      - name: Cache vcpkg installed
+        uses: actions/cache@v4
+        id: cache-vcpkg
+        with:
+          path: c:/vcpkg/installed
+          key: vcpkg-installed-${{ matrix.config.arch }}-v1
+
       - name: Install dependencies with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         run: |
           # create our own triplet
           New-Item `
