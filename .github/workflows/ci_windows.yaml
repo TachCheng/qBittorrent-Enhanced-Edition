@@ -89,7 +89,17 @@ jobs:
             --overlay-triplets="${{ env.vcpkg_path }}/triplets_overlay" `
             $packages
 
+      - name: Cache Boost and Libtorrent
+        uses: actions/cache@v4
+        id: cache-deps
+        with:
+          path: |
+            ${{ env.boost_path }}
+            ${{ env.libtorrent_path }}/install
+          key: deps-boost-${{ matrix.libtorrent.boost_minor_version }}-lt-${{ matrix.libtorrent.version }}-${{ matrix.config.arch }}
+
       - name: Install boost
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
           $boost_url="https://archives.boost.io/release/${{ matrix.libtorrent.boost_major_version }}.${{ matrix.libtorrent.boost_minor_version }}.${{ matrix.libtorrent.boost_patch_version }}/source/boost_${{ matrix.libtorrent.boost_major_version }}_${{ matrix.libtorrent.boost_minor_version }}_${{ matrix.libtorrent.boost_patch_version }}.tar.gz"
           $boost_url2="https://sourceforge.net/projects/boost/files/boost/${{ matrix.libtorrent.boost_major_version }}.${{ matrix.libtorrent.boost_minor_version }}.${{ matrix.libtorrent.boost_patch_version }}/boost_${{ matrix.libtorrent.boost_major_version }}_${{ matrix.libtorrent.boost_minor_version }}_${{ matrix.libtorrent.boost_patch_version }}.tar.gz"
@@ -119,6 +129,7 @@ jobs:
           cache: true
 
       - name: Install libtorrent
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
           git clone `
             --branch v${{ matrix.libtorrent.version }} `
