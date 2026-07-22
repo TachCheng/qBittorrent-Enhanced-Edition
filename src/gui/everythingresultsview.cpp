@@ -78,6 +78,6 @@ void EverythingResultsView::onSearchCompleted(const QString &query, const QList<
         treeItem->setText(0, item.name);
         treeItem->setText(1, item.path);
         treeItem->setText(2, Utils::Misc::friendlyUnit(item.size));
-        treeItem->setText(3, item.dateModified.isValid() ? item.dateModified.toString(u"yyyy/MM/dd hh:mm"_s) : QString{});
+        treeItem->setText(3, item.dateModified.isValid() ? item.dateModified.toString(QStringLiteral("yyyy/MM/dd hh:mm")) : QString{});
     }
 }

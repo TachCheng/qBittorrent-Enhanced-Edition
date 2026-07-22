@@ -67,6 +67,7 @@ jobs:
         with:
           path: c:/vcpkg/installed
           key: vcpkg-installed-${{ matrix.config.arch }}-v1
+          save-always: true
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -105,6 +106,7 @@ jobs:
             ${{ env.boost_path }}
             ${{ env.libtorrent_path }}/install
           key: deps-boost-${{ matrix.libtorrent.boost_minor_version }}-lt-${{ matrix.libtorrent.version }}-${{ matrix.config.arch }}
+          save-always: true
 
       - name: Install boost
         if: steps.cache-deps.outputs.cache-hit != 'true'

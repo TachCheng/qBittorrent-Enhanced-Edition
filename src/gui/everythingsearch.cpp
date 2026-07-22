@@ -93,7 +93,7 @@ void EverythingSearch::search(const QString &query)
     ZeroMemory(queryStruct, allocSize);
     queryStruct->max_results = 200;
     queryStruct->offset = 0;
-    queryStruct->reply_hwnd = reinterpret_cast<DWORD>(reinterpret_cast<uintptr_t>(winId()));
+    queryStruct->reply_hwnd = static_cast<DWORD>(static_cast<uintptr_t>(m_receiverWindow->winId()));
     queryStruct->reply_copydata_message = 0;
     queryStruct->search_flags = 0;
     queryStruct->request_flags = EVERYTHING_IPC_QUERY2_REQUEST_NAME
@@ -108,7 +108,7 @@ void EverythingSearch::search(const QString &query)
     cds.cbData = static_cast<DWORD>(allocSize);
     cds.lpData = queryStruct;
 
-    SendMessageW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(winId()), reinterpret_cast<LPARAM>(&cds));
+    SendMessageW(hwnd, WM_COPYDATA, static_cast<WPARAM>(static_cast<uintptr_t>(m_receiverWindow->winId())), reinterpret_cast<LPARAM>(&cds));
     free(queryStruct);
 #else
     emit searchCompleted(query, {});
