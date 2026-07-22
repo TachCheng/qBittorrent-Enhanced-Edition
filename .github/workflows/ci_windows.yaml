@@ -169,14 +169,14 @@ jobs:
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          $exeFile = Get-ChildItem -Path build -Recurse -Filter "*.exe" | Select-Object -First 1
+          $exeFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.exe" } | Select-Object -First 1
           if ($exeFile) {
-              Write-Host "Found executable: $($exeFile.FullName)"
+              Write-Host "Found qBittorrent executable: $($exeFile.FullName) (Size: $($exeFile.Length) bytes)"
               Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
           } else {
-              Write-Error "No exe file found in build directory!"
+              Write-Error "qbittorrent.exe was not found in build directory!"
           }
-          $pdbFile = Get-ChildItem -Path build -Recurse -Filter "*.pdb" | Select-Object -First 1
+          $pdbFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.pdb" } | Select-Object -First 1
           if ($pdbFile) {
               Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
           }
