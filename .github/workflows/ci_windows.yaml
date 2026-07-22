@@ -168,8 +168,8 @@ jobs:
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          if (Test-Path "build/src/app/qbittorrent.exe") { copy build/src/app/qbittorrent.exe upload/qBittorrent } else { Get-ChildItem -Path build -Filter qbittorrent.exe -Recurse | Copy-Item -Destination upload/qBittorrent }
-          if (Test-Path "build/src/app/qbittorrent.pdb") { copy build/src/app/qbittorrent.pdb upload/qBittorrent } else { Get-ChildItem -Path build -Filter qbittorrent.pdb -Recurse | Copy-Item -Destination upload/qBittorrent }
+          Get-ChildItem -Path build -Filter "qbittorrent.exe" -Recurse | Select-Object -First 1 | Copy-Item -Destination upload/qBittorrent/qbittorrent.exe -Force
+          Get-ChildItem -Path build -Filter "qbittorrent.pdb" -Recurse | Select-Object -First 1 | Copy-Item -Destination upload/qBittorrent/qbittorrent.pdb -Force
           copy dist/windows/qt.conf upload/qBittorrent
           # runtimes
           copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Core.dll" upload/qBittorrent
