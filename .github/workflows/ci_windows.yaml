@@ -180,22 +180,18 @@ jobs:
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          # Target executable from RUNTIME_OUTPUT_DIRECTORY
-          $exePath = "build/qbittorrent.exe"
-          if (-not (Test-Path $exePath)) {
-              $found = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.exe" } | Select-Object -First 1
-              if ($found) { $exePath = $found.FullName }
-          }
-          if (Test-Path $exePath) {
-              Write-Host "Selected main qBittorrent executable: $exePath"
-              Copy-Item $exePath -Destination upload/qBittorrent/qbittorrent.exe -Force
+          # Workspace wide search for qbittorrent.exe
+          $exeFile = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.exe" } | Select-Object -First 1
+          if ($exeFile) {
+              Write-Host "Selected main qBittorrent executable: $($exeFile.FullName) (Size: $($exeFile.Length) bytes)"
+              Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
           } else {
-              Write-Error "qbittorrent.exe not found in build directory!"
+              Write-Error "qbittorrent.exe not found in workspace!"
           }
 
-          $pdbPath = "build/qbittorrent.pdb"
-          if (Test-Path $pdbPath) {
-              Copy-Item $pdbPath -Destination upload/qBittorrent/qbittorrent.pdb -Force
+          $pdbFile = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.pdb" } | Select-Object -First 1
+          if ($pdbFile) {
+              Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
           }
           copy dist/windows/qt.conf upload/qBittorrent
 
