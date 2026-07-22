@@ -168,8 +168,17 @@ jobs:
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          Get-ChildItem -Path build -Filter "qbittorrent.exe" -Recurse | Select-Object -First 1 | Copy-Item -Destination upload/qBittorrent/qbittorrent.exe -Force
-          Get-ChildItem -Path build -Filter "qbittorrent.pdb" -Recurse | Select-Object -First 1 | Copy-Item -Destination upload/qBittorrent/qbittorrent.pdb -Force
+          Get-ChildItem -Path build -Recurse -File | Select-Object -First 30 | ForEach-Object { Write-Host $_.FullName }
+          $exeFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -like "*qbittorrent*.exe" } | Select-Object -First 1
+          if ($exeFile) {
+              Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
+          } else {
+              Write-Error "qbittorrent.exe not found in build directory!"
+          }
+          $pdbFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -like "*qbittorrent*.pdb" } | Select-Object -First 1
+          if ($pdbFile) {
+              Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
+          }
           copy dist/windows/qt.conf upload/qBittorrent
           # runtimes
           copy "${{ env.Qt_ROOT_DIR }}/bin/Qt6Core.dll" upload/qBittorrent
