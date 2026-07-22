@@ -68,6 +68,7 @@ public:
     void refresh();
     void selectMaxMp4();
     void select200MB();
+    void selectGreaterThanSize(qulonglong minSizeBytes);
 
     QList<BitTorrent::DownloadPriority> getFilePriorities() const;
     TorrentContentModelItem::ItemType itemType(const QModelIndex &index) const;

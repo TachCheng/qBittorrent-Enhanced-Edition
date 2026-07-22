@@ -98,6 +98,8 @@ private:
     void saveTorrentFile();
     void showContentFilterContextMenu();
     void setContentFilterPattern();
+    void setupCustomSizeSelectMenu();
+    void triggerEverythingSearch();
 
     Ui::AddNewTorrentDialog *m_ui = nullptr;
     std::unique_ptr<TorrentContentAdaptor> m_contentAdaptor;
@@ -105,6 +107,7 @@ private:
     int m_downloadPathIndex = -1;
     bool m_useDownloadPath = false;
     LineEdit *m_filterLine = nullptr;
+    int m_customSelectMB = 50;
 
     std::shared_ptr<Context> m_currentContext;
 

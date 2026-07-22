@@ -44,11 +44,14 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QShortcut>
 #include <QSignalBlocker>
 #include <QSize>
 #include <QString>
 #include <QUrl>
+
+#include "everythingresultsview.h"
 
 #include "base/bittorrent/addtorrentparams.h"
 #include "base/bittorrent/downloadpriority.h"
@@ -348,8 +351,12 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
     m_ui->contentTreeView->setColumnsVisibilityMode(TorrentContentWidget::ColumnsVisibilityMode::Locked);
     m_ui->contentTreeView->setDoubleClickAction(TorrentContentWidget::DoubleClickAction::Rename);
 
-    connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(m_ui->buttonOk, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_ui->buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+    m_ui->buttonOk->setDefault(true);
+
+    setupCustomSizeSelectMenu();
+
     connect(m_ui->buttonSave, &QPushButton::clicked, this, &AddNewTorrentDialog::saveTorrentFile);
     connect(m_ui->savePath, &FileSystemPathEdit::selectedPathChanged, this, &AddNewTorrentDialog::onSavePathChanged);
     connect(m_ui->downloadPath, &FileSystemPathEdit::selectedPathChanged, this, &AddNewTorrentDialog::onDownloadPathChanged);
@@ -374,10 +381,22 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
         dlg->open();
     });
     connect(m_filterLine, &LineEdit::textChanged, this, &AddNewTorrentDialog::setContentFilterPattern);
-    connect(m_ui->buttonSelectAll, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::checkAll);
-    connect(m_ui->buttonSelectNone, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::checkNone);
-    connect(m_ui->buttonSelectMaxMp4, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::selectMaxMp4);
-    connect(m_ui->buttonSelect200MB, &QPushButton::clicked, m_ui->contentTreeView, &TorrentContentWidget::select200MB);
+    connect(m_ui->buttonSelectAll, &QPushButton::clicked, this, [this]() {
+        m_ui->contentTreeView->checkAll();
+        triggerEverythingSearch();
+    });
+    connect(m_ui->buttonSelectNone, &QPushButton::clicked, this, [this]() {
+        m_ui->contentTreeView->checkNone();
+        triggerEverythingSearch();
+    });
+    connect(m_ui->buttonSelectMaxMp4, &QPushButton::clicked, this, [this]() {
+        m_ui->contentTreeView->selectMaxMp4();
+        triggerEverythingSearch();
+    });
+    connect(m_ui->buttonSelect200MB, &QPushButton::clicked, this, [this]() {
+        m_ui->contentTreeView->select200MB();
+        triggerEverythingSearch();
+    });
     connect(Preferences::instance(), &Preferences::changed, this, []
     {
         const int length = Preferences::instance()->addNewTorrentDialogSavePathHistoryLength();
@@ -939,6 +958,10 @@ void AddNewTorrentDialog::setupTreeview()
     m_filterLine->blockSignals(false);
 
     updateDiskSpaceLabel();
+
+    // Default auto-select MAX MP4 on dialog load / metadata setup
+    m_ui->contentTreeView->selectMaxMp4();
+    triggerEverythingSearch();
 }
 
 void AddNewTorrentDialog::TMMChanged(int index)
@@ -969,4 +992,60 @@ void AddNewTorrentDialog::TMMChanged(int index)
     }
 
     updateDiskSpaceLabel();
+}
+
+void AddNewTorrentDialog::setupCustomSizeSelectMenu()
+{
+    auto *menu = new QMenu(this);
+    const QList<int> sizeOptions = {10, 15, 20, 30, 50, 100, 150, 200};
+
+    for (int mb : sizeOptions)
+    {
+        const QString title = QString::number(mb) + u"MB"_s;
+        QAction *action = menu->addAction(title);
+        connect(action, &QAction::triggered, this, [this, mb, title]()
+        {
+            m_customSelectMB = mb;
+            m_ui->buttonCustomSizeSelect->setText(title);
+            m_ui->contentTreeView->selectGreaterThanSize(static_cast<qulonglong>(m_customSelectMB) * 1024ULL * 1024ULL);
+            triggerEverythingSearch();
+        });
+    }
+
+    m_ui->buttonCustomSizeSelect->setMenu(menu);
+    m_ui->buttonCustomSizeSelect->setText(QString::number(m_customSelectMB) + u"MB"_s);
+
+    connect(m_ui->buttonCustomSizeSelect, &QToolButton::clicked, this, [this]()
+    {
+        m_ui->contentTreeView->selectGreaterThanSize(static_cast<qulonglong>(m_customSelectMB) * 1024ULL * 1024ULL);
+        triggerEverythingSearch();
+    });
+}
+
+void AddNewTorrentDialog::triggerEverythingSearch()
+{
+    if (!m_ui || !m_ui->everythingResultsView)
+        return;
+
+    QString query;
+    if (m_currentContext)
+        query = m_currentContext->torrentDescr.name();
+
+    if (query.trimmed().isEmpty())
+        return;
+
+    // Clean query string (remove file extension)
+    const int lastDot = query.lastIndexOf(u'.');
+    if (lastDot > 0 && lastDot > query.length() - 5)
+        query = query.left(lastDot);
+
+    // Extract core keyword e.g. "JUR-647CX" -> "jur 647" or "JUR-647"
+    static const QRegularExpression codeRegex(u"([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"_s);
+    const QRegularExpressionMatch match = codeRegex.match(query);
+    if (match.hasMatch())
+    {
+        query = match.captured(1) + u" " + match.captured(2);
+    }
+
+    m_ui->everythingResultsView->updateSearchQuery(query);
 }

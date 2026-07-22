@@ -235,6 +235,11 @@ void TorrentContentWidget::select200MB()
     m_model->select200MB();
 }
 
+void TorrentContentWidget::selectGreaterThanSize(const qulonglong minSizeBytes)
+{
+    m_model->selectGreaterThanSize(minSizeBytes);
+}
+
 void TorrentContentWidget::setContentDragAllowed(const bool allowed)
 {
     m_contentDragAllowed = allowed;

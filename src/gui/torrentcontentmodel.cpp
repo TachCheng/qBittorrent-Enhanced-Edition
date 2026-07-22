@@ -680,16 +680,14 @@ void TorrentContentModel::selectMaxMp4()
     notifySubtreeUpdated(index(0, 0), columns);
 }
 
-void TorrentContentModel::select200MB()
+void TorrentContentModel::selectGreaterThanSize(qulonglong minSizeBytes)
 {
     if (!m_contentHandler || !m_contentHandler->hasMetadata() || m_filesIndex.isEmpty())
         return;
 
-    const qulonglong minSize = 200ULL * 1024ULL * 1024ULL; // 200 MB in bytes
-
     for (TorrentContentModelFile *file : m_filesIndex)
     {
-        if (file->name().endsWith(u".mp4", Qt::CaseInsensitive) && (file->size() > minSize))
+        if (file->size() > minSizeBytes)
             file->setPriority(BitTorrent::DownloadPriority::Normal);
         else
             file->setPriority(BitTorrent::DownloadPriority::Ignored);
@@ -706,6 +704,11 @@ void TorrentContentModel::select200MB()
         {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
     };
     notifySubtreeUpdated(index(0, 0), columns);
+}
+
+void TorrentContentModel::select200MB()
+{
+    selectGreaterThanSize(200ULL * 1024ULL * 1024ULL);
 }
 
 void TorrentContentModel::refresh()
