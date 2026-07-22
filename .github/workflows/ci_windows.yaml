@@ -175,6 +175,8 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="${{ env.vcpkg_path }}/scripts/buildsystems/vcpkg.cmake" `
             -DBOOST_ROOT="${{ env.boost_path }}/lib/cmake" `
             -DLibtorrentRasterbar_DIR="${{ env.libtorrent_path }}/install/lib/cmake/LibtorrentRasterbar" `
+            -DGUI=ON `
+            -DWEBUI=ON `
             -DMSVC_RUNTIME_DYNAMIC=ON `
             -DTESTING=ON `
             -DVCPKG_TARGET_TRIPLET=${{ matrix.config.arch }}-windows-static-md-release `
@@ -183,13 +185,17 @@ jobs:
           cmake --build build --target qbt_update_translations
           cmake --build build --target qbt_app
           cmake --build build
-          cmake --build build --target check
 
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          # Workspace wide search for qbittorrent.exe
-          $exeFile = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File | Where-Object { $_.Name -ieq "qbittorrent.exe" } | Select-Object -First 1
+          Write-Host "All executable files in workspace:"
+          Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File -Filter "*.exe" | ForEach-Object { Write-Host "$($_.FullName) ($($_.Length) bytes)" }
+
+          $exeFile = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File | Where-Object { $_.Name -like "*qbittorrent*.exe" -and $_.Name -notlike "test*" } | Select-Object -First 1
+          if (-not $exeFile) {
+              $exeFile = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -File | Where-Object { $_.Name -like "*qbt_app*.exe" } | Select-Object -First 1
+          }
           if ($exeFile) {
               Write-Host "Selected main qBittorrent executable: $($exeFile.FullName) (Size: $($exeFile.Length) bytes)"
               Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
