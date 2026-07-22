@@ -162,20 +162,21 @@ jobs:
             -DVERBOSE_CONFIGURE=ON `
             --graphviz=build/target_graph.dot
           cmake --build build --target qbt_update_translations
+          cmake --build build --target qbt_app
           cmake --build build
           cmake --build build --target check
 
       - name: Prepare build artifacts
         run: |
           New-Item -ItemType Directory -Force upload/qBittorrent | Out-Null
-          Get-ChildItem -Path build -Recurse -File | Select-Object -First 30 | ForEach-Object { Write-Host $_.FullName }
-          $exeFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -like "*qbittorrent*.exe" } | Select-Object -First 1
+          $exeFile = Get-ChildItem -Path build -Recurse -Filter "*.exe" | Select-Object -First 1
           if ($exeFile) {
+              Write-Host "Found executable: $($exeFile.FullName)"
               Copy-Item $exeFile.FullName -Destination upload/qBittorrent/qbittorrent.exe -Force
           } else {
-              Write-Error "qbittorrent.exe not found in build directory!"
+              Write-Error "No exe file found in build directory!"
           }
-          $pdbFile = Get-ChildItem -Path build -Recurse -File | Where-Object { $_.Name -like "*qbittorrent*.pdb" } | Select-Object -First 1
+          $pdbFile = Get-ChildItem -Path build -Recurse -Filter "*.pdb" | Select-Object -First 1
           if ($pdbFile) {
               Copy-Item $pdbFile.FullName -Destination upload/qBittorrent/qbittorrent.pdb -Force
           }
