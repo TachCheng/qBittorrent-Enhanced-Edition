@@ -18,67 +18,6 @@
 #include "base/path.h"
 #include "gui/utils.h"
 
-#ifdef Q_OS_WIN
-#include <windows.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-
-#ifdef _MSC_VER
-#pragma comment(lib, "shlwapi.lib")
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "uuid.lib")
-#endif
-
-namespace
-{
-    bool showShellContextMenu(HWND hwnd, const QString &filePath, const QPoint &screenPos)
-    {
-        const std::wstring wpath = QDir::toNativeSeparators(filePath).toStdWString();
-        PIDLIST_ABSOLUTE pidl = nullptr;
-        HRESULT hr = ::SHParseDisplayName(wpath.c_str(), nullptr, &pidl, 0, nullptr);
-        if (FAILED(hr) || !pidl)
-            return false;
-
-        LPCITEMIDLIST pidlChild = nullptr;
-        IShellFolder *pParentFolder = nullptr;
-        hr = ::SHBindToParent(pidl, IID_IShellFolder, reinterpret_cast<void **>(&pParentFolder), &pidlChild);
-        if (SUCCEEDED(hr) && pParentFolder)
-        {
-            IContextMenu *pContextMenu = nullptr;
-            hr = pParentFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IContextMenu, nullptr, reinterpret_cast<void **>(&pContextMenu));
-            if (SUCCEEDED(hr) && pContextMenu)
-            {
-                HMENU hMenu = ::CreatePopupMenu();
-                if (hMenu)
-                {
-                    pContextMenu->QueryContextMenu(hMenu, 0, 1, 0x7FFF, CMF_NORMAL | CMF_EXPLORE);
-
-                    int cmd = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, screenPos.x(), screenPos.y(), 0, hwnd, nullptr);
-                    if (cmd > 0)
-                    {
-                        const auto cmdIndex = static_cast<WORD>(cmd - 1);
-                        CMINVOKECOMMANDINFOEX info{};
-                        info.cbSize = sizeof(CMINVOKECOMMANDINFOEX);
-                        info.fMask = CMIC_MASK_UNICODE;
-                        info.hwnd = hwnd;
-                        info.lpVerb = reinterpret_cast<LPCSTR>(static_cast<ULONG_PTR>(cmdIndex));
-                        info.lpVerbW = reinterpret_cast<LPCWSTR>(static_cast<ULONG_PTR>(cmdIndex));
-                        info.nShow = SW_SHOWNORMAL;
-                        pContextMenu->InvokeCommand(reinterpret_cast<CMINVOKECOMMANDINFO *>(&info));
-                    }
-                    ::DestroyMenu(hMenu);
-                }
-                pContextMenu->Release();
-            }
-            pParentFolder->Release();
-        }
-        ::ILFree(pidl);
-        return true;
-    }
-}
-#endif
-
 EverythingResultsView::EverythingResultsView(QWidget *parent)
     : QWidget(parent)
 {
@@ -183,12 +122,6 @@ void EverythingResultsView::onTreeContextMenuRequested(const QPoint &pos)
     if (fullPath.isEmpty()) return;
 
     const QPoint globalPos = m_treeWidget->viewport()->mapToGlobal(pos);
-
-#ifdef Q_OS_WIN
-    const auto hwnd = reinterpret_cast<HWND>(static_cast<uintptr_t>(winId()));
-    if (showShellContextMenu(hwnd, fullPath, globalPos))
-        return;
-#endif
 
     QMenu menu(this);
     QAction *actOpen = menu.addAction(tr("開啟"));

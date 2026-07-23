@@ -324,5 +324,5 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
         programupdater.h
         programupdater.cpp
     )
-    target_link_libraries(qbt_gui PRIVATE shlwapi shell32 ole32 uuid)
 endif()
+
