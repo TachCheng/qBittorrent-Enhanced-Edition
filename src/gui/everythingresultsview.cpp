@@ -57,12 +57,13 @@ namespace
                     int cmd = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, screenPos.x(), screenPos.y(), 0, hwnd, nullptr);
                     if (cmd > 0)
                     {
-                        CMINVOKECOMMANDINFOEX info = { sizeof(CMINVOKECOMMANDINFOEX) };
+                        const auto cmdIndex = static_cast<WORD>(cmd - 1);
+                        CMINVOKECOMMANDINFOEX info{};
                         info.cbSize = sizeof(CMINVOKECOMMANDINFOEX);
                         info.fMask = CMIC_MASK_UNICODE;
                         info.hwnd = hwnd;
-                        info.lpVerb = MAKEINTRESOURCEA(cmd - 1);
-                        info.lpVerbW = MAKEINTRESOURCEW(cmd - 1);
+                        info.lpVerb = MAKEINTRESOURCEA(cmdIndex);
+                        info.lpVerbW = MAKEINTRESOURCEW(cmdIndex);
                         info.nShow = SW_SHOWNORMAL;
                         pContextMenu->InvokeCommand(reinterpret_cast<CMINVOKECOMMANDINFO *>(&info));
                     }
@@ -184,7 +185,8 @@ void EverythingResultsView::onTreeContextMenuRequested(const QPoint &pos)
     const QPoint globalPos = m_treeWidget->viewport()->mapToGlobal(pos);
 
 #ifdef Q_OS_WIN
-    if (showShellContextMenu(reinterpret_cast<HWND>(winId()), fullPath, globalPos))
+    const auto hwnd = reinterpret_cast<HWND>(static_cast<uintptr_t>(winId()));
+    if (showShellContextMenu(hwnd, fullPath, globalPos))
         return;
 #endif
 
