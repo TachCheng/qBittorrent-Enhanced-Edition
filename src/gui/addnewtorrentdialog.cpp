@@ -343,9 +343,9 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
     loadState();
 
     resize(1300, 750);
-    m_ui->splitter->setSizes({950, 300});
+    m_ui->splitter->setSizes({750, 550});
     m_ui->splitter->setStretchFactor(0, 3);
-    m_ui->splitter->setStretchFactor(1, 1);
+    m_ui->splitter->setStretchFactor(1, 2);
 
     if (const QByteArray state = m_storeTreeHeaderState; !state.isEmpty())
         m_ui->contentTreeView->header()->restoreState(state);
@@ -518,11 +518,6 @@ void AddNewTorrentDialog::setCurrentContext(const std::shared_ptr<Context> conte
     }
 #endif
 
-    // Restrict left options panel width and allocate 1100px+ space to right file tree
-    m_ui->torrentoptionsFrame->setMaximumWidth(360);
-    m_ui->splitter->setSizes({360, 1100});
-    m_ui->splitter->setStretchFactor(0, 0);
-    m_ui->splitter->setStretchFactor(1, 1);
 
     // Default focus
     if (m_ui->comboTMM->currentIndex() == 0) // 0 is Manual mode

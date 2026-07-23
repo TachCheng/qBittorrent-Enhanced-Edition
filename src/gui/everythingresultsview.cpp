@@ -30,10 +30,10 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
     m_treeWidget = new QTreeWidget(this);
     m_treeWidget->setHeaderLabels({tr("名稱"), tr("路徑"), tr("大小"), tr("修改日期")});
     m_treeWidget->setSortingEnabled(true);
-    m_treeWidget->header()->setSectionResizeMode(QHeaderView::Interactive);
-    m_treeWidget->header()->resizeSection(0, 180);
-    m_treeWidget->header()->resizeSection(1, 200);
-    m_treeWidget->header()->resizeSection(2, 80);
+    m_treeWidget->header()->resizeSection(0, 220);
+    m_treeWidget->header()->resizeSection(1, 240);
+    m_treeWidget->header()->resizeSection(2, 70);
+    m_treeWidget->header()->resizeSection(3, 120);
     mainLayout->addWidget(m_treeWidget);
 
     m_everythingSearch = new EverythingSearch(this);
