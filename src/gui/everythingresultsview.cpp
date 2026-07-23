@@ -20,9 +20,15 @@
 
 #ifdef Q_OS_WIN
 #include <windows.h>
-#include <initguid.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+
+#ifdef _MSC_VER
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "uuid.lib")
+#endif
 
 namespace
 {
