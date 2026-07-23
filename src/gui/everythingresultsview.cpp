@@ -79,11 +79,11 @@ void EverythingResultsView::updateSearchQuery(const QString &query)
     m_everythingSearch->search(query);
 }
 
-void EverythingResultsView::onSearchCompleted(const QString &query, const QList<EverythingItem> &results)
+void EverythingResultsView::onSearchCompleted(const QString &query, const QList<EverythingItem> &results, int totalMatches)
 {
     Q_UNUSED(query);
     m_treeWidget->clear();
-    m_statusLabel->setText(tr("找到 %1 個相符項目").arg(results.size()));
+    m_statusLabel->setText(tr("找到 %1 個相符項目 (共 %2 個)").arg(results.size()).arg(totalMatches));
 
     for (const EverythingItem &item : results)
     {

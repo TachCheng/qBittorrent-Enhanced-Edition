@@ -136,7 +136,7 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                     }
                 }
 
-                emit self->searchCompleted(self->m_currentQuery, results);
+                emit self->searchCompleted(self->m_currentQuery, results, static_cast<int>(list->totitems));
                 return TRUE;
             }
         }
@@ -159,7 +159,7 @@ void EverythingSearch::search(const QString &query)
     m_currentQuery = query;
     if (query.trimmed().isEmpty())
     {
-        emit searchCompleted(query, {});
+        emit searchCompleted(query, {}, 0);
         return;
     }
 
@@ -167,7 +167,7 @@ void EverythingSearch::search(const QString &query)
     HWND hwnd = getEverythingHwnd();
     if (!hwnd)
     {
-        emit searchCompleted(query, {});
+        emit searchCompleted(query, {}, 0);
         return;
     }
 
@@ -188,7 +188,7 @@ void EverythingSearch::search(const QString &query)
     queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
     queryStruct->search_flags = 0;
     queryStruct->offset = 0;
-    queryStruct->max_results = 200;
+    queryStruct->max_results = 100000;
     memcpy(queryStruct->search_string, wquery.c_str(), querySize);
 
     COPYDATASTRUCT cds;
@@ -200,6 +200,6 @@ void EverythingSearch::search(const QString &query)
     SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(m_hwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
     free(queryStruct);
 #else
-    emit searchCompleted(query, {});
+    emit searchCompleted(query, {}, 0);
 #endif
 }

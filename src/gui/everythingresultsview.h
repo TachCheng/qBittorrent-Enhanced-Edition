@@ -20,7 +20,7 @@ public:
     void updateSearchQuery(const QString &query);
 
 private slots:
-    void onSearchCompleted(const QString &query, const QList<EverythingItem> &results);
+    void onSearchCompleted(const QString &query, const QList<EverythingItem> &results, int totalMatches);
     void onItemDoubleClicked(QTreeWidgetItem *item, int column);
     void onTreeContextMenuRequested(const QPoint &pos);
 

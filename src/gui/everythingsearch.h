@@ -32,7 +32,7 @@ public:
     void search(const QString &query);
 
 signals:
-    void searchCompleted(const QString &query, const QList<EverythingItem> &results);
+    void searchCompleted(const QString &query, const QList<EverythingItem> &results, int totalMatches);
 
 private:
     QString m_currentQuery;
