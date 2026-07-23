@@ -5,22 +5,23 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 
-#define EVERYTHING_IPC_WNDCLASS L"EVERYTHING"
 #define EVERYTHING_IPC_COPYDATA_QUERYW 2
 #define EVERYTHING_IPC_COPYDATA_LISTW 2
 
 #pragma pack(push, 1)
 struct EVERYTHING_IPC_QUERYW
 {
-    DWORD max_results;
-    DWORD offset;
     DWORD reply_hwnd;
     DWORD reply_copydata_message;
+    DWORD search_flags;
+    DWORD offset;
+    DWORD max_results;
     wchar_t search_string[1];
 };
 
 struct EVERYTHING_IPC_ITEMW
 {
+    DWORD flags;
     DWORD name_offset;
     DWORD path_offset;
 };
@@ -29,10 +30,27 @@ struct EVERYTHING_IPC_LISTW
 {
     DWORD totitems;
     DWORD numitems;
+    DWORD totfolders;
+    DWORD totfiles;
+    DWORD offset;
+    DWORD max_results;
+    DWORD reserved;
     EVERYTHING_IPC_ITEMW items[1];
 };
 #pragma pack(pop)
 
+namespace
+{
+    HWND getEverythingHwnd()
+    {
+        HWND hwnd = FindWindowW(L"EVERYTHING_TASKBAR_NOTIFICATION", nullptr);
+        if (!hwnd)
+            hwnd = FindWindowW(L"EVERYTHING_IPC_WNDCLASS", nullptr);
+        if (!hwnd)
+            hwnd = FindWindowW(L"EVERYTHING", nullptr);
+        return hwnd;
+    }
+}
 #endif
 
 EverythingSearch::EverythingSearch(QWidget *parent)
@@ -46,12 +64,7 @@ EverythingSearch::~EverythingSearch() = default;
 bool EverythingSearch::isAvailable() const
 {
 #ifdef Q_OS_WIN
-    HWND hwnd = FindWindowW(EVERYTHING_IPC_WNDCLASS, nullptr);
-    if (!hwnd)
-        hwnd = FindWindowW(L"EVERYTHING_IPC_WNDCLASS", nullptr);
-    if (!hwnd)
-        hwnd = FindWindowW(L"EVERYTHING", nullptr);
-    return (hwnd != nullptr);
+    return (getEverythingHwnd() != nullptr);
 #else
     return false;
 #endif
@@ -71,12 +84,7 @@ void EverythingSearch::search(const QString &query)
     }
 
 #ifdef Q_OS_WIN
-    HWND hwnd = FindWindowW(EVERYTHING_IPC_WNDCLASS, nullptr);
-    if (!hwnd)
-        hwnd = FindWindowW(L"EVERYTHING_IPC_WNDCLASS", nullptr);
-    if (!hwnd)
-        hwnd = FindWindowW(L"EVERYTHING", nullptr);
-
+    HWND hwnd = getEverythingHwnd();
     if (!hwnd)
     {
         emit searchCompleted(query, {});
@@ -91,10 +99,11 @@ void EverythingSearch::search(const QString &query)
     if (!queryStruct) return;
 
     ZeroMemory(queryStruct, allocSize);
-    queryStruct->max_results = 200;
-    queryStruct->offset = 0;
     queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
     queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
+    queryStruct->search_flags = 0;
+    queryStruct->offset = 0;
+    queryStruct->max_results = 200;
     wcscpy_s(queryStruct->search_string, wquery.length() + 1, wquery.c_str());
 
     COPYDATASTRUCT cds;
@@ -102,7 +111,8 @@ void EverythingSearch::search(const QString &query)
     cds.cbData = static_cast<DWORD>(allocSize);
     cds.lpData = queryStruct;
 
-    SendMessageW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(receiverHwnd)), reinterpret_cast<LPARAM>(&cds));
+    DWORD_PTR sendResult = 0;
+    SendMessageTimeoutW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(receiverHwnd)), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
     free(queryStruct);
 #else
     emit searchCompleted(query, {});
@@ -143,3 +153,4 @@ bool EverythingSearch::processWmCopyData(void *message)
     return false;
 }
 #endif
+
