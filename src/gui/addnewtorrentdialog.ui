@@ -609,9 +609,15 @@
          <widget class="EverythingResultsView" name="everythingResultsView">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>1</horstretch>
+            <horstretch>2</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>350</width>
+            <height>0</height>
+           </size>
           </property>
          </widget>
         </widget>

@@ -12,6 +12,7 @@
 EverythingResultsView::EverythingResultsView(QWidget *parent)
     : QWidget(parent)
 {
+    setMinimumWidth(350);
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(4, 4, 4, 4);
 
