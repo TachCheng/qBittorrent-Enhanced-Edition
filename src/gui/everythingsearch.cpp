@@ -75,7 +75,7 @@ void EverythingSearch::createNativeWindow()
     if (m_hwnd) return;
 
     WNDCLASSEXW wc = { sizeof(WNDCLASSEXW) };
-    wc.lpfnWndProc = (WNDPROC)staticWndProc;
+    wc.lpfnWndProc = staticWndProc;
     wc.hInstance = GetModuleHandleW(nullptr);
     wc.lpszClassName = L"qBittorrent_Everything_Receiver";
     RegisterClassExW(&wc);
@@ -83,7 +83,7 @@ void EverythingSearch::createNativeWindow()
     m_hwnd = CreateWindowExW(0, L"qBittorrent_Everything_Receiver", L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, GetModuleHandleW(nullptr), nullptr);
     if (m_hwnd)
     {
-        SetWindowLongPtrW(static_cast<HWND>(m_hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        SetWindowLongPtrW(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
         // Allow WM_COPYDATA through Windows UIPI filter
         typedef BOOL (WINAPI *pfnChangeWindowMessageFilterEx)(HWND, UINT, DWORD, PVOID);
@@ -93,7 +93,7 @@ void EverythingSearch::createNativeWindow()
             auto pChangeFilter = reinterpret_cast<pfnChangeWindowMessageFilterEx>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
             if (pChangeFilter)
             {
-                pChangeFilter(static_cast<HWND>(m_hwnd), WM_COPYDATA, 1 /* MSGFLT_ALLOW */, nullptr);
+                pChangeFilter(m_hwnd, WM_COPYDATA, 1 /* MSGFLT_ALLOW */, nullptr);
             }
         }
     }
@@ -103,20 +103,20 @@ void EverythingSearch::destroyNativeWindow()
 {
     if (m_hwnd)
     {
-        DestroyWindow(static_cast<HWND>(m_hwnd));
+        DestroyWindow(m_hwnd);
         m_hwnd = nullptr;
     }
 }
 
-int64_t __stdcall EverythingSearch::staticWndProc(void *hwnd, uint32_t msg, uint64_t wParam, int64_t lParam)
+LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (msg == WM_COPYDATA)
     {
-        auto *self = reinterpret_cast<EverythingSearch *>(GetWindowLongPtrW(static_cast<HWND>(hwnd), GWLP_USERDATA));
+        auto *self = reinterpret_cast<EverythingSearch *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
         if (self)
         {
-            const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(lParam);
-            if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LISTW)
+            const COPYDATASTRUCT *cds = reinterpret_cast<const COPYDATASTRUCT *>(lParam);
+            if (cds && (cds->dwData == EVERYTHING_IPC_COPYDATA_LISTW))
             {
                 const auto *list = static_cast<const EVERYTHING_IPC_LISTW *>(cds->lpData);
                 QList<EverythingItem> results;
@@ -141,7 +141,7 @@ int64_t __stdcall EverythingSearch::staticWndProc(void *hwnd, uint32_t msg, uint
             }
         }
     }
-    return DefWindowProcW(static_cast<HWND>(hwnd), msg, wParam, lParam);
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 #endif
 
@@ -189,7 +189,7 @@ void EverythingSearch::search(const QString &query)
     queryStruct->search_flags = 0;
     queryStruct->offset = 0;
     queryStruct->max_results = 200;
-    wcscpy_s(queryStruct->search_string, wquery.length() + 1, wquery.c_str());
+    memcpy(queryStruct->search_string, wquery.c_str(), querySize);
 
     COPYDATASTRUCT cds;
     cds.dwData = EVERYTHING_IPC_COPYDATA_QUERYW;
@@ -197,10 +197,9 @@ void EverythingSearch::search(const QString &query)
     cds.lpData = queryStruct;
 
     DWORD_PTR sendResult = 0;
-    SendMessageTimeoutW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(m_hwnd)), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
+    SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(m_hwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
     free(queryStruct);
 #else
     emit searchCompleted(query, {});
 #endif
 }
-

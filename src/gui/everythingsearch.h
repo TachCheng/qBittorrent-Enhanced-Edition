@@ -35,8 +35,8 @@ signals:
 private:
     QString m_currentQuery;
 #ifdef Q_OS_WIN
-    void *m_hwnd = nullptr;
-    static int64_t __stdcall staticWndProc(void *hwnd, uint32_t msg, uint64_t wParam, int64_t lParam);
+    HWND m_hwnd = nullptr;
+    static LRESULT CALLBACK staticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     void createNativeWindow();
     void destroyNativeWindow();
 #endif
