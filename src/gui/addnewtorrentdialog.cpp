@@ -360,9 +360,14 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
     m_ui->contentTreeView->setColumnsVisibilityMode(TorrentContentWidget::ColumnsVisibilityMode::Locked);
     m_ui->contentTreeView->setDoubleClickAction(TorrentContentWidget::DoubleClickAction::Rename);
 
+    m_creationTime.start();
+
     connect(m_ui->buttonOk, &QPushButton::clicked, this, &QDialog::accept);
     connect(m_ui->buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
-    m_ui->buttonOk->setDefault(true);
+    m_ui->buttonOk->setDefault(false);
+    m_ui->buttonOk->setAutoDefault(false);
+    m_ui->buttonCancel->setDefault(false);
+    m_ui->buttonCancel->setAutoDefault(false);
 
     setupCustomSizeSelectMenu();
 
@@ -456,6 +461,19 @@ void AddNewTorrentDialog::showEvent(QShowEvent *event)
 
     activateWindow();
     raise();
+}
+
+void AddNewTorrentDialog::keyPressEvent(QKeyEvent *event)
+{
+    if ((event->key() == Qt::Key_Return) || (event->key() == Qt::Key_Enter))
+    {
+        if (m_creationTime.elapsed() < 500)
+        {
+            event->ignore();
+            return;
+        }
+    }
+    QDialog::keyPressEvent(event);
 }
 
 void AddNewTorrentDialog::setCurrentContext(const std::shared_ptr<Context> context)

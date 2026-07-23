@@ -32,6 +32,7 @@
 #include <memory>
 
 #include <QDialog>
+#include <QElapsedTimer>
 
 #include "base/path.h"
 #include "base/settingvalue.h"
@@ -87,6 +88,7 @@ private:
     struct Context;
 
     void showEvent(QShowEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
     void setCurrentContext(std::shared_ptr<Context> context);
     void updateCurrentContext();
@@ -110,6 +112,7 @@ private:
     int m_customSelectMB = 50;
 
     std::shared_ptr<Context> m_currentContext;
+    QElapsedTimer m_creationTime;
 
     SettingValue<QSize> m_storeDialogSize;
     SettingValue<QString> m_storeDefaultCategory;
