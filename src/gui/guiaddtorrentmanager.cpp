@@ -43,7 +43,7 @@
 
 namespace
 {
-    void adjustDialogGeometry(QWidget *dialog, const QWidget *parentWindow, int offset = 0)
+    void adjustDialogGeometry(QWidget *dialog, const QWidget *parentWindow)
     {
         // It is preferable to place the dialog in the center of the parent window.
         // However, if it goes beyond the current screen, then move it so that it fits there
@@ -53,8 +53,6 @@ namespace
         QRect dialogGeometry = dialog->geometry();
 
         dialogGeometry.moveCenter(parentWindow->geometry().center());
-        if (offset > 0)
-            dialogGeometry.translate(offset, offset);
 
         const QRect screenGeometry = parentWindow->screen()->availableGeometry();
 
@@ -282,8 +280,7 @@ bool GUIAddTorrentManager::processTorrent(const QString &source
         m_dialogs.remove(infoHash);
     });
 
-    const int offset = (static_cast<int>(m_dialogs.size()) % 10) * 25;
-    adjustDialogGeometry(dlg, app()->mainWindow(), offset);
+    adjustDialogGeometry(dlg, app()->mainWindow());
     dlg->show();
 
     return true;
