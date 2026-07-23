@@ -20,6 +20,8 @@ public:
 
 private slots:
     void onSearchCompleted(const QString &query, const QList<EverythingItem> &results);
+    void onItemDoubleClicked(QTreeWidgetItem *item, int column);
+    void onTreeContextMenuRequested(const QPoint &pos);
 
 private:
     EverythingSearch *m_everythingSearch = nullptr;
