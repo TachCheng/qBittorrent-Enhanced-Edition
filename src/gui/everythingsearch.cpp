@@ -66,7 +66,11 @@ bool EverythingSearch::isAvailable() const
 #endif
 }
 
+#ifdef Q_OS_WIN
+void EverythingSearch::search(const QString &query, HWND receiverHwnd)
+#else
 void EverythingSearch::search(const QString &query)
+#endif
 {
     m_currentQuery = query;
     if (query.trimmed().isEmpty())
@@ -77,6 +81,11 @@ void EverythingSearch::search(const QString &query)
 
 #ifdef Q_OS_WIN
     HWND hwnd = FindWindowW(EVERYTHING_IPC_WNDCLASS, nullptr);
+    if (!hwnd)
+        hwnd = FindWindowW(L"EVERYTHING_IPC_WNDCLASS", nullptr);
+    if (!hwnd)
+        hwnd = FindWindowW(L"EVERYTHING", nullptr);
+
     if (!hwnd)
     {
         emit searchCompleted(query, {});
@@ -93,7 +102,7 @@ void EverythingSearch::search(const QString &query)
     ZeroMemory(queryStruct, allocSize);
     queryStruct->max_results = 200;
     queryStruct->offset = 0;
-    queryStruct->reply_hwnd = static_cast<DWORD>(static_cast<uintptr_t>(winId()));
+    queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
     queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LIST2W;
     queryStruct->search_flags = 0;
     queryStruct->request_flags = EVERYTHING_IPC_QUERY2_REQUEST_NAME
@@ -108,7 +117,7 @@ void EverythingSearch::search(const QString &query)
     cds.cbData = static_cast<DWORD>(allocSize);
     cds.lpData = queryStruct;
 
-    SendMessageW(hwnd, WM_COPYDATA, static_cast<WPARAM>(static_cast<uintptr_t>(winId())), reinterpret_cast<LPARAM>(&cds));
+    SendMessageW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(receiverHwnd)), reinterpret_cast<LPARAM>(&cds));
     free(queryStruct);
 #else
     emit searchCompleted(query, {});
@@ -116,16 +125,13 @@ void EverythingSearch::search(const QString &query)
 }
 
 #ifdef Q_OS_WIN
-bool EverythingSearch::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+bool EverythingSearch::processWmCopyData(void *message)
 {
-    Q_UNUSED(eventType);
-    Q_UNUSED(result);
-
     const MSG *msg = static_cast<MSG *>(message);
-    if (msg->message == WM_COPYDATA)
+    if (msg && (msg->message == WM_COPYDATA))
     {
         const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(msg->lParam);
-        if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W)
+        if (cds && (cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W || cds->dwData == 2))
         {
             const auto *list = static_cast<const EVERYTHING_IPC_LIST2W *>(cds->lpData);
             QList<EverythingItem> results;
@@ -135,36 +141,23 @@ bool EverythingSearch::nativeEvent(const QByteArray &eventType, void *message, q
                 const char *basePtr = reinterpret_cast<const char *>(list);
                 for (DWORD i = 0; i < list->numitems; ++i)
                 {
-                    const char *itemDataPtr = basePtr + list->items[i].data_offset;
-                    EverythingItem item;
+                    const auto *namePtr = reinterpret_cast<const wchar_t *>(itemDataPtr + list->items[i].name_offset);
+                    const auto *pathPtr = reinterpret_cast<const wchar_t *>(itemDataPtr + list->items[i].path_offset);
 
-                    // Parse request fields in order: Name (string), Path (string), Size (qulonglong), DateModified (FILETIME)
-                    const wchar_t *wname = reinterpret_cast<const wchar_t *>(itemDataPtr);
-                    item.name = QString::fromWCharArray(wname);
-                    itemDataPtr += (wcslen(wname) + 1) * sizeof(wchar_t);
+                    item.name = QString::fromWCharArray(namePtr);
+                    item.path = QString::fromWCharArray(pathPtr);
 
-                    const wchar_t *wpath = reinterpret_cast<const wchar_t *>(itemDataPtr);
-                    item.path = QString::fromWCharArray(wpath);
-                    itemDataPtr += (wcslen(wpath) + 1) * sizeof(wchar_t);
+                    if (list->items[i].request_flags & EVERYTHING_IPC_QUERY2_REQUEST_SIZE)
+                        item.size = list->items[i].size;
 
-                    // Align pointer to 8 bytes for size and filetime if needed
-                    uintptr_t ptrVal = reinterpret_cast<uintptr_t>(itemDataPtr);
-                    if (ptrVal % sizeof(qulonglong) != 0)
-                        ptrVal += (sizeof(qulonglong) - (ptrVal % sizeof(qulonglong)));
-                    itemDataPtr = reinterpret_cast<const char *>(ptrVal);
-
-                    const auto *sizePtr = reinterpret_cast<const qulonglong *>(itemDataPtr);
-                    item.size = *sizePtr;
-                    itemDataPtr += sizeof(qulonglong);
-
-                    const auto *ftPtr = reinterpret_cast<const FILETIME *>(itemDataPtr);
-                    ULARGE_INTEGER ull;
-                    ull.LowPart = ftPtr->dwLowDateTime;
-                    ull.HighPart = ftPtr->dwHighDateTime;
-                    // FILETIME to QDateTime (Windows epoch to Unix epoch offset: 11644473600 seconds)
-                    qint64 seconds = (ull.QuadPart / 10000000ULL) - 11644473600ULL;
-                    item.dateModified = QDateTime::fromSecsSinceEpoch(seconds);
-
+                    if (list->items[i].request_flags & EVERYTHING_IPC_QUERY2_REQUEST_DATE_MODIFIED)
+                    {
+                        ULARGE_INTEGER ull;
+                        ull.LowPart = list->items[i].date_modified.dwLowDateTime;
+                        ull.HighPart = list->items[i].date_modified.dwHighDateTime;
+                        qint64 seconds = (ull.QuadPart / 10000000ULL) - 11644473600ULL;
+                        item.dateModified = QDateTime::fromSecsSinceEpoch(seconds);
+                    }
                     results.append(item);
                 }
             }

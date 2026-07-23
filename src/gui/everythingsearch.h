@@ -6,6 +6,10 @@
 #include <QDateTime>
 #include <QWidget>
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+
 struct EverythingItem
 {
     QString name;
@@ -23,15 +27,15 @@ public:
     ~EverythingSearch() override;
 
     bool isAvailable() const;
+#ifdef Q_OS_WIN
+    void search(const QString &query, HWND receiverHwnd);
+    bool processWmCopyData(void *message);
+#else
     void search(const QString &query);
+#endif
 
 signals:
     void searchCompleted(const QString &query, const QList<EverythingItem> &results);
-
-protected:
-#ifdef Q_OS_WIN
-    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
-#endif
 
 private:
     QString m_currentQuery;

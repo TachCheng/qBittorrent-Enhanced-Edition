@@ -1044,7 +1044,7 @@ void AddNewTorrentDialog::triggerEverythingSearch()
     if (lastDot > 0 && lastDot > query.length() - 5)
         query = query.left(lastDot);
 
-    // Extract core keyword e.g. "JUR-647CX" -> "jur 647" or "JUR-647"
+    // Extract core keyword e.g. "JUR-647CX" -> "jur 647"
     static const QRegularExpression codeRegex(u"([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"_s);
     const QRegularExpressionMatch match = codeRegex.match(query);
     if (match.hasMatch())
@@ -1052,5 +1052,21 @@ void AddNewTorrentDialog::triggerEverythingSearch()
         query = match.captured(1) + u" " + match.captured(2);
     }
 
-    m_ui->everythingResultsView->updateSearchQuery(query);
+    m_ui->everythingResultsView->updateSearchQuery(query, winId());
 }
+
+#ifdef Q_OS_WIN
+bool AddNewTorrentDialog::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+{
+    const MSG *msg = static_cast<MSG *>(message);
+    if (msg && (msg->message == WM_COPYDATA))
+    {
+        if (m_ui->everythingResultsView->searchEngine()->processWmCopyData(message))
+        {
+            if (result) *result = TRUE;
+            return true;
+        }
+    }
+    return QDialog::nativeEvent(eventType, message, result);
+}
+#endif
