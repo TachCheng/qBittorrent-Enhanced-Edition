@@ -1064,11 +1064,11 @@ void AddNewTorrentDialog::triggerEverythingSearch()
         query = query.left(lastDot);
 
     // Extract core keyword e.g. "JUR-647CX" -> "jur 647"
-    static const QRegularExpression codeRegex(u"([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"_s);
+    static const QRegularExpression codeRegex(QStringLiteral("([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"));
     const QRegularExpressionMatch match = codeRegex.match(query);
     if (match.hasMatch())
     {
-        query = match.captured(1) + u" " + match.captured(2);
+        query = match.captured(1) + QLatin1Char(' ') + match.captured(2);
     }
 
     m_ui->everythingResultsView->updateSearchQuery(query);
