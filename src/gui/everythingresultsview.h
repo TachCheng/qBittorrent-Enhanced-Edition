@@ -16,8 +16,7 @@ public:
     explicit EverythingResultsView(QWidget *parent = nullptr);
     ~EverythingResultsView() override;
 
-    void updateSearchQuery(const QString &query, WId receiverWId = 0);
-    EverythingSearch *searchEngine() const { return m_everythingSearch; }
+    void updateSearchQuery(const QString &query);
 
 private slots:
     void onSearchCompleted(const QString &query, const QList<EverythingItem> &results);

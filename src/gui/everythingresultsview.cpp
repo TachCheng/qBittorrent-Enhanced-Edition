@@ -51,7 +51,7 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
 
 EverythingResultsView::~EverythingResultsView() = default;
 
-void EverythingResultsView::updateSearchQuery(const QString &query, WId receiverWId)
+void EverythingResultsView::updateSearchQuery(const QString &query)
 {
     if (m_queryEdit->text() != query)
         m_queryEdit->setText(query);
@@ -63,11 +63,7 @@ void EverythingResultsView::updateSearchQuery(const QString &query, WId receiver
     }
 
     m_statusLabel->setText(tr("正在搜尋: %1 ...").arg(query));
-#ifdef Q_OS_WIN
-    m_everythingSearch->search(query, reinterpret_cast<HWND>(receiverWId));
-#else
     m_everythingSearch->search(query);
-#endif
 }
 
 void EverythingResultsView::onSearchCompleted(const QString &query, const QList<EverythingItem> &results)

@@ -1072,21 +1072,5 @@ void AddNewTorrentDialog::triggerEverythingSearch()
         query = match.captured(1) + u" " + match.captured(2);
     }
 
-    m_ui->everythingResultsView->updateSearchQuery(query, winId());
+    m_ui->everythingResultsView->updateSearchQuery(query);
 }
-
-#ifdef Q_OS_WIN
-bool AddNewTorrentDialog::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
-{
-    const MSG *msg = static_cast<MSG *>(message);
-    if (msg && (msg->message == WM_COPYDATA))
-    {
-        if (m_ui->everythingResultsView->searchEngine()->processWmCopyData(message))
-        {
-            if (result) *result = TRUE;
-            return true;
-        }
-    }
-    return QDialog::nativeEvent(eventType, message, result);
-}
-#endif

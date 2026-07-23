@@ -87,9 +87,6 @@ private:
     struct Context;
 
     void showEvent(QShowEvent *event) override;
-#ifdef Q_OS_WIN
-    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
-#endif
 
     void setCurrentContext(std::shared_ptr<Context> context);
     void updateCurrentContext();

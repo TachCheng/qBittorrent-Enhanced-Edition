@@ -57,9 +57,93 @@ EverythingSearch::EverythingSearch(QWidget *parent)
     : QWidget(parent)
 {
     setAttribute(Qt::WA_DontShowOnScreen, true);
+#ifdef Q_OS_WIN
+    createNativeWindow();
+#endif
 }
 
-EverythingSearch::~EverythingSearch() = default;
+EverythingSearch::~EverythingSearch()
+{
+#ifdef Q_OS_WIN
+    destroyNativeWindow();
+#endif
+}
+
+#ifdef Q_OS_WIN
+void EverythingSearch::createNativeWindow()
+{
+    if (m_hwnd) return;
+
+    WNDCLASSEXW wc = { sizeof(WNDCLASSEXW) };
+    wc.lpfnWndProc = (WNDPROC)staticWndProc;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.lpszClassName = L"qBittorrent_Everything_Receiver";
+    RegisterClassExW(&wc);
+
+    m_hwnd = CreateWindowExW(0, L"qBittorrent_Everything_Receiver", L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, GetModuleHandleW(nullptr), nullptr);
+    if (m_hwnd)
+    {
+        SetWindowLongPtrW(static_cast<HWND>(m_hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+
+        // Allow WM_COPYDATA through Windows UIPI filter
+        typedef BOOL (WINAPI *pfnChangeWindowMessageFilterEx)(HWND, UINT, DWORD, PVOID);
+        HMODULE hUser32 = GetModuleHandleW(L"user32.dll");
+        if (hUser32)
+        {
+            auto pChangeFilter = reinterpret_cast<pfnChangeWindowMessageFilterEx>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
+            if (pChangeFilter)
+            {
+                pChangeFilter(static_cast<HWND>(m_hwnd), WM_COPYDATA, 1 /* MSGFLT_ALLOW */, nullptr);
+            }
+        }
+    }
+}
+
+void EverythingSearch::destroyNativeWindow()
+{
+    if (m_hwnd)
+    {
+        DestroyWindow(static_cast<HWND>(m_hwnd));
+        m_hwnd = nullptr;
+    }
+}
+
+int64_t __stdcall EverythingSearch::staticWndProc(void *hwnd, uint32_t msg, uint64_t wParam, int64_t lParam)
+{
+    if (msg == WM_COPYDATA)
+    {
+        auto *self = reinterpret_cast<EverythingSearch *>(GetWindowLongPtrW(static_cast<HWND>(hwnd), GWLP_USERDATA));
+        if (self)
+        {
+            const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(lParam);
+            if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LISTW)
+            {
+                const auto *list = static_cast<const EVERYTHING_IPC_LISTW *>(cds->lpData);
+                QList<EverythingItem> results;
+
+                if (list)
+                {
+                    const char *basePtr = reinterpret_cast<const char *>(list);
+                    for (DWORD i = 0; i < list->numitems; ++i)
+                    {
+                        EverythingItem item;
+                        const auto *namePtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].name_offset);
+                        const auto *pathPtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].path_offset);
+
+                        item.name = QString::fromWCharArray(namePtr);
+                        item.path = QString::fromWCharArray(pathPtr);
+                        results.append(item);
+                    }
+                }
+
+                emit self->searchCompleted(self->m_currentQuery, results);
+                return TRUE;
+            }
+        }
+    }
+    return DefWindowProcW(static_cast<HWND>(hwnd), msg, wParam, lParam);
+}
+#endif
 
 bool EverythingSearch::isAvailable() const
 {
@@ -70,11 +154,7 @@ bool EverythingSearch::isAvailable() const
 #endif
 }
 
-#ifdef Q_OS_WIN
-void EverythingSearch::search(const QString &query, HWND receiverHwnd)
-#else
 void EverythingSearch::search(const QString &query)
-#endif
 {
     m_currentQuery = query;
     if (query.trimmed().isEmpty())
@@ -91,6 +171,11 @@ void EverythingSearch::search(const QString &query)
         return;
     }
 
+    if (!m_hwnd)
+        createNativeWindow();
+
+    if (!m_hwnd) return;
+
     const std::wstring wquery = query.toStdWString();
     const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
     const size_t allocSize = sizeof(EVERYTHING_IPC_QUERYW) + querySize;
@@ -99,7 +184,7 @@ void EverythingSearch::search(const QString &query)
     if (!queryStruct) return;
 
     ZeroMemory(queryStruct, allocSize);
-    queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
+    queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(m_hwnd));
     queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
     queryStruct->search_flags = 0;
     queryStruct->offset = 0;
@@ -112,45 +197,10 @@ void EverythingSearch::search(const QString &query)
     cds.lpData = queryStruct;
 
     DWORD_PTR sendResult = 0;
-    SendMessageTimeoutW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(receiverHwnd)), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
+    SendMessageTimeoutW(hwnd, WM_COPYDATA, static_cast<WPARAM>(reinterpret_cast<uintptr_t>(m_hwnd)), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
     free(queryStruct);
 #else
     emit searchCompleted(query, {});
 #endif
 }
-
-#ifdef Q_OS_WIN
-bool EverythingSearch::processWmCopyData(void *message)
-{
-    const MSG *msg = static_cast<MSG *>(message);
-    if (msg && (msg->message == WM_COPYDATA))
-    {
-        const COPYDATASTRUCT *cds = reinterpret_cast<COPYDATASTRUCT *>(msg->lParam);
-        if (cds && cds->dwData == EVERYTHING_IPC_COPYDATA_LISTW)
-        {
-            const auto *list = static_cast<const EVERYTHING_IPC_LISTW *>(cds->lpData);
-            QList<EverythingItem> results;
-
-            if (list)
-            {
-                const char *basePtr = reinterpret_cast<const char *>(list);
-                for (DWORD i = 0; i < list->numitems; ++i)
-                {
-                    EverythingItem item;
-                    const auto *namePtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].name_offset);
-                    const auto *pathPtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].path_offset);
-
-                    item.name = QString::fromWCharArray(namePtr);
-                    item.path = QString::fromWCharArray(pathPtr);
-                    results.append(item);
-                }
-            }
-
-            emit searchCompleted(m_currentQuery, results);
-            return true;
-        }
-    }
-    return false;
-}
-#endif
 

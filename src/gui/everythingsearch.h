@@ -27,16 +27,17 @@ public:
     ~EverythingSearch() override;
 
     bool isAvailable() const;
-#ifdef Q_OS_WIN
-    void search(const QString &query, HWND receiverHwnd);
-    bool processWmCopyData(void *message);
-#else
     void search(const QString &query);
-#endif
 
 signals:
     void searchCompleted(const QString &query, const QList<EverythingItem> &results);
 
 private:
     QString m_currentQuery;
+#ifdef Q_OS_WIN
+    void *m_hwnd = nullptr;
+    static int64_t __stdcall staticWndProc(void *hwnd, uint32_t msg, uint64_t wParam, int64_t lParam);
+    void createNativeWindow();
+    void destroyNativeWindow();
+#endif
 };
