@@ -1,6 +1,7 @@
 #include "everythingsearch.h"
 
 #include <QtGlobal>
+#include <QThreadPool>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -177,29 +178,33 @@ void EverythingSearch::search(const QString &query)
 
     if (!m_hwnd) return;
 
-    const std::wstring wquery = query.toStdWString();
-    const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
-    const size_t allocSize = sizeof(EVERYTHING_IPC_QUERYW) + querySize;
+    const HWND receiverHwnd = m_hwnd;
+    QThreadPool::globalInstance()->start([query, hwnd, receiverHwnd]()
+    {
+        const std::wstring wquery = query.toStdWString();
+        const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
+        const size_t allocSize = sizeof(EVERYTHING_IPC_QUERYW) + querySize;
 
-    auto *queryStruct = static_cast<EVERYTHING_IPC_QUERYW *>(malloc(allocSize));
-    if (!queryStruct) return;
+        auto *queryStruct = static_cast<EVERYTHING_IPC_QUERYW *>(malloc(allocSize));
+        if (!queryStruct) return;
 
-    ZeroMemory(queryStruct, allocSize);
-    queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(m_hwnd));
-    queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
-    queryStruct->search_flags = 0;
-    queryStruct->offset = 0;
-    queryStruct->max_results = 100000;
-    memcpy(queryStruct->search_string, wquery.c_str(), querySize);
+        ZeroMemory(queryStruct, allocSize);
+        queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
+        queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
+        queryStruct->search_flags = 0;
+        queryStruct->offset = 0;
+        queryStruct->max_results = 100000;
+        memcpy(queryStruct->search_string, wquery.c_str(), querySize);
 
-    COPYDATASTRUCT cds;
-    cds.dwData = EVERYTHING_IPC_COPYDATA_QUERYW;
-    cds.cbData = static_cast<DWORD>(allocSize);
-    cds.lpData = queryStruct;
+        COPYDATASTRUCT cds;
+        cds.dwData = EVERYTHING_IPC_COPYDATA_QUERYW;
+        cds.cbData = static_cast<DWORD>(allocSize);
+        cds.lpData = queryStruct;
 
-    DWORD_PTR sendResult = 0;
-    SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(m_hwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
-    free(queryStruct);
+        DWORD_PTR sendResult = 0;
+        SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(receiverHwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
+        free(queryStruct);
+    });
 #else
     emit searchCompleted(query, {}, 0);
 #endif

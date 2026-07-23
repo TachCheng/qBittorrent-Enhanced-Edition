@@ -48,6 +48,7 @@
 #include <QRegularExpression>
 #include <QShortcut>
 #include <QSignalBlocker>
+#include <QTimer>
 #include <QSize>
 #include <QString>
 #include <QUrl>
@@ -1070,25 +1071,31 @@ void AddNewTorrentDialog::triggerEverythingSearch()
     if (!m_ui || !m_ui->everythingResultsView)
         return;
 
-    QString query;
-    if (m_currentContext)
-        query = m_currentContext->torrentDescr.name();
-
-    if (query.trimmed().isEmpty())
-        return;
-
-    // Clean query string (remove file extension)
-    const int lastDot = query.lastIndexOf(u'.');
-    if (lastDot > 0 && lastDot > query.length() - 5)
-        query = query.left(lastDot);
-
-    // Extract core keyword e.g. "JUR-647CX" -> "jur 647"
-    static const QRegularExpression codeRegex(QStringLiteral("([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"));
-    const QRegularExpressionMatch match = codeRegex.match(query);
-    if (match.hasMatch())
+    QTimer::singleShot(150, this, [this]()
     {
-        query = match.captured(1) + QLatin1Char(' ') + match.captured(2);
-    }
+        if (!m_ui || !m_ui->everythingResultsView)
+            return;
 
-    m_ui->everythingResultsView->updateSearchQuery(query);
+        QString query;
+        if (m_currentContext)
+            query = m_currentContext->torrentDescr.name();
+
+        if (query.trimmed().isEmpty())
+            return;
+
+        // Clean query string (remove file extension)
+        const int lastDot = query.lastIndexOf(u'.');
+        if (lastDot > 0 && lastDot > query.length() - 5)
+            query = query.left(lastDot);
+
+        // Extract core keyword e.g. "JUR-647CX" -> "jur 647"
+        static const QRegularExpression codeRegex(QStringLiteral("([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"));
+        const QRegularExpressionMatch match = codeRegex.match(query);
+        if (match.hasMatch())
+        {
+            query = match.captured(1) + QLatin1Char(' ') + match.captured(2);
+        }
+
+        m_ui->everythingResultsView->updateSearchQuery(query);
+    });
 }
