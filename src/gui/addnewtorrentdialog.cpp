@@ -504,6 +504,26 @@ void AddNewTorrentDialog::setCurrentContext(const std::shared_ptr<Context> conte
     m_filterLine->blockSignals(true);
     m_filterLine->clear();
 
+#ifdef Q_OS_WIN
+    // Allow WM_COPYDATA through Windows UIPI filter for high-privilege Everything IPC
+    typedef BOOL (WINAPI *pfnChangeWindowMessageFilterEx)(HWND, UINT, DWORD, PVOID);
+    HMODULE hUser32 = GetModuleHandleW(L"user32.dll");
+    if (hUser32)
+    {
+        auto pChangeFilter = reinterpret_cast<pfnChangeWindowMessageFilterEx>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
+        if (pChangeFilter)
+        {
+            pChangeFilter(reinterpret_cast<HWND>(winId()), WM_COPYDATA, 1 /* MSGFLT_ALLOW */, nullptr);
+        }
+    }
+#endif
+
+    // Restrict left options panel width and allocate 1100px+ space to right file tree
+    m_ui->torrentoptionsFrame->setMaximumWidth(360);
+    m_ui->splitter->setSizes({360, 1100});
+    m_ui->splitter->setStretchFactor(0, 0);
+    m_ui->splitter->setStretchFactor(1, 1);
+
     // Default focus
     if (m_ui->comboTMM->currentIndex() == 0) // 0 is Manual mode
         m_ui->savePath->setFocus();
