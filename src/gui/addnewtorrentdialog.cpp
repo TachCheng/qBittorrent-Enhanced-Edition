@@ -40,6 +40,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QFuture>
+#include <QKeyEvent>
 #include <QList>
 #include <QMenu>
 #include <QMessageBox>
