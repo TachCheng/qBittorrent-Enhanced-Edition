@@ -28,13 +28,13 @@ struct EVERYTHING_IPC_ITEMW
 
 struct EVERYTHING_IPC_LISTW
 {
-    DWORD totitems;
-    DWORD numitems;
     DWORD totfolders;
     DWORD totfiles;
+    DWORD totitems;
+    DWORD numfolders;
+    DWORD numfiles;
+    DWORD numitems;
     DWORD offset;
-    DWORD max_results;
-    DWORD reserved;
     EVERYTHING_IPC_ITEMW items[1];
 };
 #pragma pack(pop)
@@ -103,6 +103,7 @@ void EverythingSearch::destroyNativeWindow()
 {
     if (m_hwnd)
     {
+        SetWindowLongPtrW(m_hwnd, GWLP_USERDATA, 0);
         DestroyWindow(m_hwnd);
         m_hwnd = nullptr;
     }
