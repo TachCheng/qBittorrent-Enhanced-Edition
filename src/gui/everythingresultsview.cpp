@@ -42,7 +42,7 @@ namespace
 
         LPCITEMIDLIST pidlChild = nullptr;
         IShellFolder *pParentFolder = nullptr;
-        hr = ::SHBindToParent(pidl, IID_PPV_ARGS(&pParentFolder), &pidlChild);
+        hr = ::SHBindToParent(pidl, IID_IShellFolder, reinterpret_cast<void **>(&pParentFolder), &pidlChild);
         if (SUCCEEDED(hr) && pParentFolder)
         {
             IContextMenu *pContextMenu = nullptr;
@@ -62,8 +62,8 @@ namespace
                         info.cbSize = sizeof(CMINVOKECOMMANDINFOEX);
                         info.fMask = CMIC_MASK_UNICODE;
                         info.hwnd = hwnd;
-                        info.lpVerb = MAKEINTRESOURCEA(cmdIndex);
-                        info.lpVerbW = MAKEINTRESOURCEW(cmdIndex);
+                        info.lpVerb = reinterpret_cast<LPCSTR>(static_cast<ULONG_PTR>(cmdIndex));
+                        info.lpVerbW = reinterpret_cast<LPCWSTR>(static_cast<ULONG_PTR>(cmdIndex));
                         info.nShow = SW_SHOWNORMAL;
                         pContextMenu->InvokeCommand(reinterpret_cast<CMINVOKECOMMANDINFO *>(&info));
                     }
