@@ -5,6 +5,7 @@
 #include "everythingsearch.h"
 
 class QTreeWidget;
+class QTreeWidgetItem;
 class QLabel;
 class QLineEdit;
 

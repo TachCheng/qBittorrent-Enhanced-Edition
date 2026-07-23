@@ -18,6 +18,8 @@ struct EverythingItem
     QDateTime dateModified;
 };
 
+Q_DECLARE_METATYPE(EverythingItem)
+
 class EverythingSearch final : public QWidget
 {
     Q_OBJECT

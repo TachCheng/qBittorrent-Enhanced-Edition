@@ -1,0 +1,563 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e6]:
+      - heading "Navigation Menu" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - link "Homepage" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e13]:
+          - navigation "Global" [ref=e16]:
+            - list [ref=e17]:
+              - listitem [ref=e18]:
+                - button "Platform" [ref=e20] [cursor=pointer]
+              - listitem [ref=e23]:
+                - button "Solutions" [ref=e25] [cursor=pointer]
+              - listitem [ref=e28]:
+                - button "Resources" [ref=e30] [cursor=pointer]
+              - listitem [ref=e33]:
+                - button "Open Source" [ref=e35] [cursor=pointer]
+              - listitem [ref=e38]:
+                - button "Enterprise" [ref=e40] [cursor=pointer]
+              - listitem [ref=e43]:
+                - link "Pricing" [ref=e44] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+          - generic [ref=e46]:
+            - button "Search or jump to…" [ref=e49] [cursor=pointer]
+            - link "Sign in" [ref=e54] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2FTachCheng%2FqBittorrent-Enhanced-Edition%2Factions
+            - link "Sign up" [ref=e55] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Factions%2Findex&source=header-repo&source_repo=TachCheng%2FqBittorrent-Enhanced-Edition
+            - button "Appearance settings" [ref=e58] [cursor=pointer]
+  - main [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - link "TachCheng" [ref=e70] [cursor=pointer]:
+              - /url: /TachCheng
+            - generic [ref=e71]: /
+            - strong [ref=e72]:
+              - link "qBittorrent-Enhanced-Edition" [ref=e73] [cursor=pointer]:
+                - /url: /TachCheng/qBittorrent-Enhanced-Edition
+            - generic [ref=e74]: Public
+          - generic [ref=e75]:
+            - text: forked from
+            - link "c0re100/qBittorrent-Enhanced-Edition" [ref=e76] [cursor=pointer]:
+              - /url: /c0re100/qBittorrent-Enhanced-Edition
+        - generic [ref=e77]:
+          - list:
+            - listitem [ref=e78]:
+              - link "You must be signed in to change notification settings" [ref=e79] [cursor=pointer]:
+                - /url: /login?return_to=%2FTachCheng%2FqBittorrent-Enhanced-Edition
+                - text: Notifications
+            - listitem [ref=e82]:
+              - link "Fork 0" [ref=e83] [cursor=pointer]:
+                - /url: /login?return_to=%2FTachCheng%2FqBittorrent-Enhanced-Edition
+                - text: Fork
+                - generic "0" [ref=e86]
+            - listitem [ref=e87]:
+              - link "You must be signed in to star a repository" [ref=e89] [cursor=pointer]:
+                - /url: /login?return_to=%2FTachCheng%2FqBittorrent-Enhanced-Edition
+                - text: Star
+                - generic "0 users starred this repository" [ref=e92]: "0"
+      - navigation "Repository" [ref=e93]:
+        - list [ref=e94]:
+          - listitem [ref=e95]:
+            - link "Code" [ref=e96] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition
+          - listitem [ref=e100]:
+            - link "Pull requests" [ref=e101] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/pulls
+          - listitem [ref=e105]:
+            - link "Actions" [ref=e106] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions
+          - listitem [ref=e110]:
+            - link "Projects" [ref=e111] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/projects
+          - listitem [ref=e115]:
+            - link "Security and quality" [ref=e116] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/security
+          - listitem [ref=e120]:
+            - link "Insights" [ref=e121] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/pulse
+    - generic [ref=e126]:
+      - 'heading "Actions: TachCheng/qBittorrent-Enhanced-Edition" [level=1] [ref=e127]'
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - heading "Actions" [level=2] [ref=e133]
+          - navigation "Actions Workflows" [ref=e137]:
+            - list [ref=e139]:
+              - listitem [ref=e140]:
+                - link "All workflows" [ref=e141] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions
+              - listitem [ref=e143]
+              - listitem [ref=e144]:
+                - list "Workflows" [ref=e148]:
+                  - listitem [ref=e149]:
+                    - link "CI - Windows" [ref=e150] [cursor=pointer]:
+                      - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/workflows/ci_windows.yaml
+              - listitem [ref=e152]
+              - listitem [ref=e153]:
+                - generic [ref=e156]:
+                  - heading "Management" [level=3] [ref=e158]
+                  - list "Management" [ref=e159]:
+                    - listitem [ref=e160]
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - heading "All workflows" [level=2] [ref=e169]
+              - search [ref=e175]:
+                - combobox "Filter workflow runs" [ref=e176]
+            - generic [ref=e177]: Showing runs from all workflows
+          - generic [ref=e178]:
+            - generic [ref=e179]:
+              - strong [ref=e182]: 100 workflow runs
+              - generic [ref=e183]:
+                - button "Workflow" [ref=e187] [cursor=pointer]
+                - button "Event" [ref=e193] [cursor=pointer]
+                - button "Status" [ref=e199] [cursor=pointer]
+                - button "Branch" [ref=e205] [cursor=pointer]
+                - button "Actor" [ref=e211] [cursor=pointer]
+            - generic [ref=e214]:
+              - generic [ref=e216]:
+                - generic [ref=e217]:
+                  - 'link "currently running: Run 46 of CI - Windows. fix(gui): replace _s string literal operator with QStringLiteral in t…" [ref=e218] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/30011325682
+                    - img "currently running:" [ref=e221]
+                    - generic [ref=e225]: "fix(gui): replace _s string literal operator with QStringLiteral in t…"
+                  - generic [ref=e226]:
+                    - text: "CI - Windows #46:"
+                    - generic [ref=e227]
+                - link "v5_2_x" [ref=e231] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e233]:
+                  - generic [ref=e234]:
+                    - generic "Jul 23, 2026, 9:28 PM GMT+8" [ref=e239]: 10 minutes ago
+                    - generic [ref=e240]: In progress
+                  - group [ref=e244]:
+                    - generic "Show options" [ref=e245] [cursor=pointer]
+              - generic [ref=e249]:
+                - generic [ref=e250]:
+                  - 'link "failed: Run 45 of CI - Windows. fix(gui): fix MSVC /WX compilation warnings in everythingsearch WndPr…" [ref=e251] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/30010024660
+                    - img "failed:" [ref=e253]
+                    - generic [ref=e255]: "fix(gui): fix MSVC /WX compilation warnings in everythingsearch WndPr…"
+                  - generic [ref=e256]:
+                    - text: "CI - Windows #45:"
+                    - generic [ref=e257]
+                - link "v5_2_x" [ref=e261] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e263]:
+                  - generic [ref=e264]:
+                    - generic "Jul 23, 2026, 9:10 PM GMT+8" [ref=e269]: 28 minutes ago
+                    - generic [ref=e270]
+                  - group [ref=e274]:
+                    - generic "Show options" [ref=e275] [cursor=pointer]
+              - generic [ref=e279]:
+                - generic [ref=e280]:
+                  - 'link "failed: Run 44 of CI - Windows. fix(gui): use clean Qt QMenu context menu for Everything search results" [ref=e281] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/30008290153
+                    - img "failed:" [ref=e283]
+                    - generic [ref=e285]: "fix(gui): use clean Qt QMenu context menu for Everything search results"
+                  - generic [ref=e286]:
+                    - text: "CI - Windows #44:"
+                    - generic [ref=e287]
+                - link "v5_2_x" [ref=e291] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e293]:
+                  - generic [ref=e294]:
+                    - generic "Jul 23, 2026, 8:45 PM GMT+8" [ref=e299]: 53 minutes ago
+                    - generic [ref=e300]
+                  - group [ref=e304]:
+                    - generic "Show options" [ref=e305] [cursor=pointer]
+              - generic [ref=e309]:
+                - generic [ref=e310]:
+                  - 'link "failed: Run 43 of CI - Windows. fix(gui): explicitly pass IID_IShellFolder and cast MAKEINTRESOURCE t…" [ref=e311] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/30007055378
+                    - img "failed:" [ref=e313]
+                    - generic [ref=e315]: "fix(gui): explicitly pass IID_IShellFolder and cast MAKEINTRESOURCE t…"
+                  - generic [ref=e316]:
+                    - text: "CI - Windows #43:"
+                    - generic [ref=e317]
+                - link "v5_2_x" [ref=e321] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e323]:
+                  - generic [ref=e324]:
+                    - generic "Jul 23, 2026, 8:27 PM GMT+8" [ref=e329]: Today at 8:27 PM
+                    - generic [ref=e330]
+                  - group [ref=e334]:
+                    - generic "Show options" [ref=e335] [cursor=pointer]
+              - generic [ref=e339]:
+                - generic [ref=e340]:
+                  - 'link "failed: Run 42 of CI - Windows. fix(gui): fix winId pointer cast and link Windows shell libraries in …" [ref=e341] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29997194983
+                    - img "failed:" [ref=e343]
+                    - generic [ref=e345]: "fix(gui): fix winId pointer cast and link Windows shell libraries in …"
+                  - generic [ref=e346]:
+                    - text: "CI - Windows #42:"
+                    - generic [ref=e347]
+                - link "v5_2_x" [ref=e351] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e353]:
+                  - generic [ref=e354]:
+                    - generic "Jul 23, 2026, 5:54 PM GMT+8" [ref=e359]: Today at 5:54 PM
+                    - generic [ref=e360]
+                  - group [ref=e364]:
+                    - generic "Show options" [ref=e365] [cursor=pointer]
+              - generic [ref=e369]:
+                - generic [ref=e370]:
+                  - 'link "failed: Run 41 of CI - Windows. fix(gui): remove initguid.h and add MSVC pragma comment libraries for…" [ref=e371] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29995963712
+                    - img "failed:" [ref=e373]
+                    - generic [ref=e375]: "fix(gui): remove initguid.h and add MSVC pragma comment libraries for…"
+                  - generic [ref=e376]:
+                    - text: "CI - Windows #41:"
+                    - generic [ref=e377]
+                - link "v5_2_x" [ref=e381] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e383]:
+                  - generic [ref=e384]:
+                    - generic "Jul 23, 2026, 5:35 PM GMT+8" [ref=e389]: Today at 5:35 PM
+                    - generic [ref=e390]
+                  - group [ref=e394]:
+                    - generic "Show options" [ref=e395] [cursor=pointer]
+              - generic [ref=e399]:
+                - generic [ref=e400]:
+                  - 'link "failed: Run 40 of CI - Windows. feat(gui): add Windows Shell right-click context menu and double-clic…" [ref=e401] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29994573116
+                    - img "failed:" [ref=e403]
+                    - generic [ref=e405]: "feat(gui): add Windows Shell right-click context menu and double-clic…"
+                  - generic [ref=e406]:
+                    - text: "CI - Windows #40:"
+                    - generic [ref=e407]
+                - link "v5_2_x" [ref=e411] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e413]:
+                  - generic [ref=e414]:
+                    - generic "Jul 23, 2026, 5:15 PM GMT+8" [ref=e419]: Today at 5:15 PM
+                    - generic [ref=e420]
+                  - group [ref=e424]:
+                    - generic "Show options" [ref=e425] [cursor=pointer]
+              - generic [ref=e429]:
+                - generic [ref=e430]:
+                  - 'link "completed successfully: Run 39 of CI - Windows. fix(gui): fix 3-pane splitter size allocation and set 350px min width…" [ref=e431] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29991901657
+                    - img "completed successfully:" [ref=e433]
+                    - generic [ref=e435]: "fix(gui): fix 3-pane splitter size allocation and set 350px min width…"
+                  - generic [ref=e436]:
+                    - text: "CI - Windows #39:"
+                    - generic [ref=e437]
+                - link "v5_2_x" [ref=e441] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e443]:
+                  - generic [ref=e444]:
+                    - generic "Jul 23, 2026, 4:40 PM GMT+8" [ref=e449]: Today at 4:40 PM
+                    - generic [ref=e450]
+                  - group [ref=e454]:
+                    - generic "Show options" [ref=e455] [cursor=pointer]
+              - generic [ref=e459]:
+                - generic [ref=e460]:
+                  - 'link "completed successfully: Run 38 of CI - Windows. fix(gui): balance layout split ratio and enable expanding policy for …" [ref=e461] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29981421782
+                    - img "completed successfully:" [ref=e463]
+                    - generic [ref=e465]: "fix(gui): balance layout split ratio and enable expanding policy for …"
+                  - generic [ref=e466]:
+                    - text: "CI - Windows #38:"
+                    - generic [ref=e467]
+                - link "v5_2_x" [ref=e471] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e473]:
+                  - generic [ref=e474]:
+                    - generic "Jul 23, 2026, 1:10 PM GMT+8" [ref=e479]: Today at 1:10 PM
+                    - generic [ref=e480]
+                  - group [ref=e484]:
+                    - generic "Show options" [ref=e485] [cursor=pointer]
+              - generic [ref=e489]:
+                - generic [ref=e490]:
+                  - 'link "completed successfully: Run 37 of CI - Windows. Implement standalone Native Message Window for Everything IPC communi…" [ref=e491] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29971948520
+                    - img "completed successfully:" [ref=e493]
+                    - generic [ref=e495]: Implement standalone Native Message Window for Everything IPC communi…
+                  - generic [ref=e496]:
+                    - text: "CI - Windows #37:"
+                    - generic [ref=e497]
+                - link "v5_2_x" [ref=e501] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e503]:
+                  - generic [ref=e504]:
+                    - generic "Jul 23, 2026, 9:30 AM GMT+8" [ref=e509]: Today at 9:30 AM
+                    - generic [ref=e510]
+                  - group [ref=e514]:
+                    - generic "Show options" [ref=e515] [cursor=pointer]
+              - generic [ref=e519]:
+                - generic [ref=e520]:
+                  - 'link "completed successfully: Run 36 of CI - Windows. fix(gui): fix Everything IPC window lookup, query struct member order…" [ref=e521] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29970599008
+                    - img "completed successfully:" [ref=e523]
+                    - generic [ref=e525]: "fix(gui): fix Everything IPC window lookup, query struct member order…"
+                  - generic [ref=e526]:
+                    - text: "CI - Windows #36:"
+                    - generic [ref=e527]
+                - link "v5_2_x" [ref=e531] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e533]:
+                  - generic [ref=e534]:
+                    - generic "Jul 23, 2026, 8:59 AM GMT+8" [ref=e539]: Today at 8:59 AM
+                    - generic [ref=e540]
+                  - group [ref=e544]:
+                    - generic "Show options" [ref=e545] [cursor=pointer]
+              - generic [ref=e549]:
+                - generic [ref=e550]:
+                  - 'link "completed successfully: Run 35 of CI - Windows. Fix Windows UIPI IPC message filter and restrict torrentoptionsFrame …" [ref=e551] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29970201401
+                    - img "completed successfully:" [ref=e553]
+                    - generic [ref=e555]: Fix Windows UIPI IPC message filter and restrict torrentoptionsFrame …
+                  - generic [ref=e556]:
+                    - text: "CI - Windows #35:"
+                    - generic [ref=e557]
+                - link "v5_2_x" [ref=e561] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e563]:
+                  - generic [ref=e564]:
+                    - generic "Jul 23, 2026, 8:50 AM GMT+8" [ref=e569]: Today at 8:50 AM
+                    - generic [ref=e570]
+                  - group [ref=e574]:
+                    - generic "Show options" [ref=e575] [cursor=pointer]
+              - generic [ref=e579]:
+                - generic [ref=e580]:
+                  - 'link "completed successfully: Run 34 of CI - Windows. Switch to classic EVERYTHING_IPC_QUERYW protocol for 100% Everything …" [ref=e581] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29968733006
+                    - img "completed successfully:" [ref=e583]
+                    - generic [ref=e585]: Switch to classic EVERYTHING_IPC_QUERYW protocol for 100% Everything …
+                  - generic [ref=e586]:
+                    - text: "CI - Windows #34:"
+                    - generic [ref=e587]
+                - link "v5_2_x" [ref=e591] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e593]:
+                  - generic [ref=e594]:
+                    - generic "Jul 23, 2026, 8:19 AM GMT+8" [ref=e599]: Today at 8:19 AM
+                    - generic [ref=e600]
+                  - group [ref=e604]:
+                    - generic "Show options" [ref=e605] [cursor=pointer]
+              - generic [ref=e609]:
+                - generic [ref=e610]:
+                  - 'link "failed: Run 33 of CI - Windows. Refactor Everything IPC WM_COPYDATA handling via top-level dialog and…" [ref=e611] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29967844525
+                    - img "failed:" [ref=e613]
+                    - generic [ref=e615]: Refactor Everything IPC WM_COPYDATA handling via top-level dialog and…
+                  - generic [ref=e616]:
+                    - text: "CI - Windows #33:"
+                    - generic [ref=e617]
+                - link "v5_2_x" [ref=e621] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e623]:
+                  - generic [ref=e624]:
+                    - generic "Jul 23, 2026, 8:00 AM GMT+8" [ref=e629]: Today at 8:00 AM
+                    - generic [ref=e630]
+                  - group [ref=e634]:
+                    - generic "Show options" [ref=e635] [cursor=pointer]
+              - generic [ref=e639]:
+                - generic [ref=e640]:
+                  - 'link "completed successfully: Run 32 of CI - Windows. Fix Everything IPC macro name in everythingsearch.cpp" [ref=e641] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29949924777
+                    - img "completed successfully:" [ref=e643]
+                    - generic [ref=e645]: Fix Everything IPC macro name in everythingsearch.cpp
+                  - generic [ref=e646]:
+                    - text: "CI - Windows #32:"
+                    - generic [ref=e647]
+                - link "v5_2_x" [ref=e651] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e653]:
+                  - generic [ref=e654]:
+                    - generic "Jul 23, 2026, 3:11 AM GMT+8" [ref=e659]: Jul 23, 3:11 AM GMT+8
+                    - generic [ref=e660]
+                  - group [ref=e664]:
+                    - generic "Show options" [ref=e665] [cursor=pointer]
+              - generic [ref=e669]:
+                - generic [ref=e670]:
+                  - 'link "failed: Run 31 of CI - Windows. Fix Everything IPC reply_copydata_message to enable search results an…" [ref=e671] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29948633975
+                    - img "failed:" [ref=e673]
+                    - generic [ref=e675]: Fix Everything IPC reply_copydata_message to enable search results an…
+                  - generic [ref=e676]:
+                    - text: "CI - Windows #31:"
+                    - generic [ref=e677]
+                - link "v5_2_x" [ref=e681] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e683]:
+                  - generic [ref=e684]:
+                    - generic "Jul 23, 2026, 2:53 AM GMT+8" [ref=e689]: Jul 23, 2:53 AM GMT+8
+                    - generic [ref=e690]
+                  - group [ref=e694]:
+                    - generic "Show options" [ref=e695] [cursor=pointer]
+              - generic [ref=e699]:
+                - generic [ref=e700]:
+                  - 'link "completed successfully: Run 30 of CI - Windows. Fix pointer arrow dereference on cds in everythingsearch.cpp" [ref=e701] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29946098252
+                    - img "completed successfully:" [ref=e703]
+                    - generic [ref=e705]: Fix pointer arrow dereference on cds in everythingsearch.cpp
+                  - generic [ref=e706]:
+                    - text: "CI - Windows #30:"
+                    - generic [ref=e707]
+                - link "v5_2_x" [ref=e711] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e713]:
+                  - generic [ref=e714]:
+                    - generic "Jul 23, 2026, 2:18 AM GMT+8" [ref=e719]: Jul 23, 2:18 AM GMT+8
+                    - generic [ref=e720]
+                  - group [ref=e724]:
+                    - generic "Show options" [ref=e725] [cursor=pointer]
+              - generic [ref=e729]:
+                - generic [ref=e730]:
+                  - 'link "failed: Run 29 of CI - Windows. Fix winId() call on EverythingSearch in everythingsearch.cpp" [ref=e731] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29944580216
+                    - img "failed:" [ref=e733]
+                    - generic [ref=e735]: Fix winId() call on EverythingSearch in everythingsearch.cpp
+                  - generic [ref=e736]:
+                    - text: "CI - Windows #29:"
+                    - generic [ref=e737]
+                - link "v5_2_x" [ref=e741] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e743]:
+                  - generic [ref=e744]:
+                    - generic "Jul 23, 2026, 1:57 AM GMT+8" [ref=e749]: Jul 23, 1:57 AM GMT+8
+                    - generic [ref=e750]
+                  - group [ref=e754]:
+                    - generic "Show options" [ref=e755] [cursor=pointer]
+              - generic [ref=e759]:
+                - generic [ref=e760]:
+                  - 'link "failed: Run 28 of CI - Windows. Fix MSVC /WX strict C++20 compilation errors in everythingresultsview…" [ref=e761] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29942881358
+                    - img "failed:" [ref=e763]
+                    - generic [ref=e765]: Fix MSVC /WX strict C++20 compilation errors in everythingresultsview…
+                  - generic [ref=e766]:
+                    - text: "CI - Windows #28:"
+                    - generic [ref=e767]
+                - link "v5_2_x" [ref=e771] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e773]:
+                  - generic [ref=e774]:
+                    - generic "Jul 23, 2026, 1:33 AM GMT+8" [ref=e779]: Jul 23, 1:33 AM GMT+8
+                    - generic [ref=e780]
+                  - group [ref=e784]:
+                    - generic "Show options" [ref=e785] [cursor=pointer]
+              - generic [ref=e789]:
+                - generic [ref=e790]:
+                  - 'link "failed: Run 27 of CI - Windows. Explicitly pass -DGUI=ON, remove target check, and enhance smart exec…" [ref=e791] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29941617406
+                    - img "failed:" [ref=e793]
+                    - generic [ref=e795]: Explicitly pass -DGUI=ON, remove target check, and enhance smart exec…
+                  - generic [ref=e796]:
+                    - text: "CI - Windows #27:"
+                    - generic [ref=e797]
+                - link "v5_2_x" [ref=e801] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e803]:
+                  - generic [ref=e804]:
+                    - generic "Jul 23, 2026, 1:16 AM GMT+8" [ref=e809]: Jul 23, 1:16 AM GMT+8
+                    - generic [ref=e810]
+                  - group [ref=e814]:
+                    - generic "Show options" [ref=e815] [cursor=pointer]
+              - generic [ref=e819]:
+                - generic [ref=e820]:
+                  - 'link "failed: Run 26 of CI - Windows. Add vcpkg installed directory cache to bypass 7-minute vcpkg build step" [ref=e821] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29940472923
+                    - img "failed:" [ref=e823]
+                    - generic [ref=e825]: Add vcpkg installed directory cache to bypass 7-minute vcpkg build step
+                  - generic [ref=e826]:
+                    - text: "CI - Windows #26:"
+                    - generic [ref=e827]
+                - link "v5_2_x" [ref=e831] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e833]:
+                  - generic [ref=e834]:
+                    - generic "Jul 23, 2026, 1:00 AM GMT+8" [ref=e839]: Jul 23, 1:00 AM GMT+8
+                    - generic [ref=e840]
+                  - group [ref=e844]:
+                    - generic "Show options" [ref=e845] [cursor=pointer]
+              - generic [ref=e849]:
+                - generic [ref=e850]:
+                  - 'link "failed: Run 25 of CI - Windows. Use workspace wide recursive search for qbittorrent.exe artifact in c…" [ref=e851] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29939888870
+                    - img "failed:" [ref=e853]
+                    - generic [ref=e855]: Use workspace wide recursive search for qbittorrent.exe artifact in c…
+                  - generic [ref=e856]:
+                    - text: "CI - Windows #25:"
+                    - generic [ref=e857]
+                - link "v5_2_x" [ref=e861] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e863]:
+                  - generic [ref=e864]:
+                    - generic "Jul 23, 2026, 12:52 AM GMT+8" [ref=e869]: Jul 23, 12:52 AM GMT+8
+                    - generic [ref=e870]
+                  - group [ref=e874]:
+                    - generic "Show options" [ref=e875] [cursor=pointer]
+              - generic [ref=e879]:
+                - generic [ref=e880]:
+                  - 'link "failed: Run 24 of CI - Windows. Fix artifact packaging to strictly target build/qbittorrent.exe inste…" [ref=e881] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29938228659
+                    - img "failed:" [ref=e883]
+                    - generic [ref=e885]: Fix artifact packaging to strictly target build/qbittorrent.exe inste…
+                  - generic [ref=e886]:
+                    - text: "CI - Windows #24:"
+                    - generic [ref=e887]
+                - link "v5_2_x" [ref=e891] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e893]:
+                  - generic [ref=e894]:
+                    - generic "Jul 23, 2026, 12:29 AM GMT+8" [ref=e899]: Jul 23, 12:29 AM GMT+8
+                    - generic [ref=e900]
+                  - group [ref=e904]:
+                    - generic "Show options" [ref=e905] [cursor=pointer]
+              - generic [ref=e909]:
+                - generic [ref=e910]:
+                  - 'link "failed: Run 23 of CI - Windows. Add GitHub Actions cache for Boost and libtorrent to speed up CI comp…" [ref=e911] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29936446985
+                    - img "failed:" [ref=e913]
+                    - generic [ref=e915]: Add GitHub Actions cache for Boost and libtorrent to speed up CI comp…
+                  - generic [ref=e916]:
+                    - text: "CI - Windows #23:"
+                    - generic [ref=e917]
+                - link "v5_2_x" [ref=e921] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e923]:
+                  - generic [ref=e924]:
+                    - generic "Jul 23, 2026, 12:05 AM GMT+8" [ref=e929]: Jul 23, 12:05 AM GMT+8
+                    - generic [ref=e930]
+                  - group [ref=e934]:
+                    - generic "Show options" [ref=e935] [cursor=pointer]
+              - generic [ref=e939]:
+                - generic [ref=e940]:
+                  - 'link "failed: Run 22 of CI - Windows. Use official windeployqt tool to deploy complete Qt runtime dependenc…" [ref=e941] [cursor=pointer]':
+                    - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions/runs/29936251796
+                    - img "failed:" [ref=e943]
+                    - generic [ref=e945]: Use official windeployqt tool to deploy complete Qt runtime dependenc…
+                  - generic [ref=e946]:
+                    - text: "CI - Windows #22:"
+                    - generic [ref=e947]
+                - link "v5_2_x" [ref=e951] [cursor=pointer]:
+                  - /url: /TachCheng/qBittorrent-Enhanced-Edition/tree/refs/heads/v5_2_x
+                - generic [ref=e953]:
+                  - generic [ref=e954]:
+                    - generic "Jul 23, 2026, 12:03 AM GMT+8" [ref=e959]: Jul 23, 12:03 AM GMT+8
+                    - generic [ref=e960]
+                  - group [ref=e964]:
+                    - generic "Show options" [ref=e965] [cursor=pointer]
+          - navigation "Pagination" [ref=e970]:
+            - generic "Previous page" [ref=e971]: Previous
+            - emphasis [ref=e972] [cursor=pointer]: "1"
+            - link "Page 2" [ref=e973] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions?page=2
+              - text: "2"
+            - link "Page 3" [ref=e974] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions?page=3
+              - text: "3"
+            - link "Page 4" [ref=e975] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions?page=4
+              - text: "4"
+            - link "Next page" [ref=e976] [cursor=pointer]:
+              - /url: /TachCheng/qBittorrent-Enhanced-Edition/actions?page=2
+              - text: Next
