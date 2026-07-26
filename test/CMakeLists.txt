@@ -11,7 +11,6 @@ set(testFiles
     testbittorrenttrackerentry.cpp
     testconceptsexplicitlyconvertibleto.cpp
     testconceptsstringable.cpp
-    testeverythingsearch.cpp
     testglobal.cpp
     testorderedset.cpp
     testpath.cpp
@@ -30,9 +29,15 @@ foreach(testFile ${testFiles})
     get_filename_component(testFilename "${testFile}" NAME_WLE)
 
     add_executable("${testFilename}" "${testFile}")
-    target_link_libraries("${testFilename}" PRIVATE Qt::Test qbt_base qbt_gui)
+    target_link_libraries("${testFilename}" PRIVATE Qt::Test qbt_base)
     add_test(NAME "${testFilename}" COMMAND "${testFilename}")
 
     add_dependencies(check "${testFilename}")
 endforeach()
+
+add_executable(testeverythingsearch testeverythingsearch.cpp ../src/gui/everythingsearch.cpp)
+target_link_libraries(testeverythingsearch PRIVATE Qt::Test qbt_base)
+add_test(NAME testeverythingsearch COMMAND testeverythingsearch)
+add_dependencies(check testeverythingsearch)
+
 
