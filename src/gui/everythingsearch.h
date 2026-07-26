@@ -31,6 +31,8 @@ public:
     bool isAvailable() const;
     void search(const QString &query);
 
+    static QList<EverythingItem> parseResponseBuffer(quintptr dwData, const void *lpData, quint32 cbData, int &totalMatches);
+
 signals:
     void searchCompleted(const QString &query, const QList<EverythingItem> &results, int totalMatches);
 
