@@ -4,7 +4,6 @@
 #include <QString>
 #include <QList>
 #include <QDateTime>
-#include <QWidget>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -20,12 +19,12 @@ struct EverythingItem
 
 Q_DECLARE_METATYPE(EverythingItem)
 
-class EverythingSearch final : public QWidget
+class EverythingSearch final : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit EverythingSearch(QWidget *parent = nullptr);
+    explicit EverythingSearch(QObject *parent = nullptr);
     ~EverythingSearch() override;
 
     bool isAvailable() const;

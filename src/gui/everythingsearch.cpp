@@ -96,10 +96,9 @@ namespace
 }
 #endif
 
-EverythingSearch::EverythingSearch(QWidget *parent)
-    : QWidget(parent)
+EverythingSearch::EverythingSearch(QObject *parent)
+    : QObject(parent)
 {
-    setAttribute(Qt::WA_DontShowOnScreen, true);
 #ifdef Q_OS_WIN
     createNativeWindow();
 #endif
