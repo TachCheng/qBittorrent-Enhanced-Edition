@@ -119,89 +119,7 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
         return results;
 
 #ifdef Q_OS_WIN
-    if (dwData == EVERYTHING_IPC_COPYDATA_LIST2W)
-    {
-        if (cbData < sizeof(EVERYTHING_IPC_LIST2W))
-            return results;
-
-        const auto *list = static_cast<const EVERYTHING_IPC_LIST2W *>(lpData);
-        totalMatches = static_cast<int>(list->totitems);
-
-        const char *basePtr = reinterpret_cast<const char *>(list);
-        const char *itemsStart = ((list->offset > 0) && (list->offset < cbData))
-            ? (basePtr + list->offset)
-            : reinterpret_cast<const char *>(list->items);
-
-        const char *baseEnd = basePtr + cbData;
-        for (DWORD i = 0; i < list->numitems; ++i)
-        {
-            const char *itemPtr = itemsStart + (i * sizeof(EVERYTHING_IPC_ITEM2W));
-            if (itemPtr + sizeof(EVERYTHING_IPC_ITEM2W) > baseEnd)
-                break;
-
-            const auto *item2 = reinterpret_cast<const EVERYTHING_IPC_ITEM2W *>(itemPtr);
-            const char *dataPtr = (item2->data_offset >= sizeof(EVERYTHING_IPC_LIST2W))
-                ? (basePtr + item2->data_offset)
-                : (itemPtr + item2->data_offset);
-
-            if ((dataPtr < basePtr) || (dataPtr >= baseEnd))
-                continue;
-
-            EverythingItem item;
-            const DWORD req = list->request_flags;
-
-            if (req & EVERYTHING_IPC_QUERY2_REQUEST_NAME)
-            {
-                if (dataPtr + sizeof(wchar_t) <= baseEnd)
-                {
-                    const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
-                    const size_t maxWChars = (baseEnd - dataPtr) / sizeof(wchar_t);
-                    const size_t len = wcsnlen(wstr, maxWChars);
-                    item.name = QString::fromWCharArray(wstr, static_cast<int>(len));
-                    dataPtr += (len + 1) * sizeof(wchar_t);
-                }
-            }
-            if (req & EVERYTHING_IPC_QUERY2_REQUEST_PATH)
-            {
-                if (dataPtr + sizeof(wchar_t) <= baseEnd)
-                {
-                    const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
-                    const size_t maxWChars = (baseEnd - dataPtr) / sizeof(wchar_t);
-                    const size_t len = wcsnlen(wstr, maxWChars);
-                    item.path = QString::fromWCharArray(wstr, static_cast<int>(len));
-                    dataPtr += (len + 1) * sizeof(wchar_t);
-                }
-            }
-            if (req & EVERYTHING_IPC_QUERY2_REQUEST_SIZE)
-            {
-                if (dataPtr + sizeof(LARGE_INTEGER) <= baseEnd)
-                {
-                    LARGE_INTEGER sz;
-                    memcpy(&sz, dataPtr, sizeof(LARGE_INTEGER));
-                    item.size = static_cast<qulonglong>(sz.QuadPart);
-                }
-                dataPtr += sizeof(LARGE_INTEGER);
-            }
-            if (req & EVERYTHING_IPC_QUERY2_REQUEST_DATE_MODIFIED)
-            {
-                if (dataPtr + sizeof(FILETIME) <= baseEnd)
-                {
-                    FILETIME ft;
-                    memcpy(&ft, dataPtr, sizeof(FILETIME));
-                    const ULONGLONG ftVal = (static_cast<ULONGLONG>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
-                    if (ftVal >= 116444736000000000ULL)
-                    {
-                        const qint64 msecs = static_cast<qint64>((ftVal - 116444736000000000ULL) / 10000ULL);
-                        item.dateModified = QDateTime::fromMSecsSinceEpoch(msecs, Qt::UTC).toLocalTime();
-                    }
-                }
-                dataPtr += sizeof(FILETIME);
-            }
-
-            results.append(item);
-        }
-    }
-    else if (dwData == EVERYTHING_IPC_COPYDATA_LISTW)
+    if (dwData == EVERYTHING_IPC_COPYDATA_LISTW || dwData == EVERYTHING_IPC_COPYDATA_LIST2W)
     {
         if (cbData < sizeof(EVERYTHING_IPC_LISTW))
             return results;
@@ -210,14 +128,57 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
         totalMatches = static_cast<int>(list->totitems);
 
         const char *basePtr = reinterpret_cast<const char *>(list);
-        for (DWORD i = 0; i < list->numitems; ++i)
-        {
-            EverythingItem item;
-            const auto *namePtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].name_offset);
-            const auto *pathPtr = reinterpret_cast<const wchar_t *>(basePtr + list->items[i].path_offset);
+        const char *baseEnd = basePtr + cbData;
+        const char *itemsStart = ((list->offset > 0) && (list->offset < cbData))
+            ? (basePtr + list->offset)
+            : (basePtr + 28);
 
-            item.name = QString::fromWCharArray(namePtr);
-            item.path = QString::fromWCharArray(pathPtr);
+        const DWORD numFolders = list->numfolders;
+        const DWORD numFiles = list->numfiles;
+        const DWORD totalItems = numFolders + numFiles;
+
+        for (DWORD i = 0; i < totalItems; ++i)
+        {
+            const char *itemPtr = itemsStart + (i * sizeof(EVERYTHING_IPC_ITEMW));
+            if (itemPtr + sizeof(EVERYTHING_IPC_ITEMW) > baseEnd)
+                break;
+
+            const auto *item1 = reinterpret_cast<const EVERYTHING_IPC_ITEMW *>(itemPtr);
+            EverythingItem item;
+
+            if (item1->filename_offset > 0 && item1->filename_offset < cbData)
+            {
+                const char *namePtr = basePtr + item1->filename_offset;
+                if (namePtr + sizeof(wchar_t) <= baseEnd)
+                {
+                    const auto *wstr = reinterpret_cast<const wchar_t *>(namePtr);
+                    const size_t maxWChars = (baseEnd - namePtr) / sizeof(wchar_t);
+                    const size_t len = wcsnlen(wstr, maxWChars);
+                    item.name = QString::fromWCharArray(wstr, static_cast<int>(len));
+                }
+            }
+
+            if (item1->path_offset > 0 && item1->path_offset < cbData)
+            {
+                const char *pathPtr = basePtr + item1->path_offset;
+                if (pathPtr + sizeof(wchar_t) <= baseEnd)
+                {
+                    const auto *wstr = reinterpret_cast<const wchar_t *>(pathPtr);
+                    const size_t maxWChars = (baseEnd - pathPtr) / sizeof(wchar_t);
+                    const size_t len = wcsnlen(wstr, maxWChars);
+                    item.path = QString::fromWCharArray(wstr, static_cast<int>(len));
+                }
+            }
+
+            const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
+            QFileInfo fi(fullPath);
+            if (fi.exists())
+            {
+                if (fi.isFile())
+                    item.size = static_cast<qulonglong>(fi.size());
+                item.dateModified = fi.lastModified();
+            }
+
             results.append(item);
         }
     }
@@ -334,26 +295,21 @@ void EverythingSearch::search(const QString &query)
     {
         const std::wstring wquery = query.toStdWString();
         const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
-        const size_t allocSize = sizeof(EVERYTHING_IPC_QUERY2W) + querySize;
+        const size_t allocSize = sizeof(EVERYTHING_IPC_QUERYW) + querySize;
 
-        auto *queryStruct = static_cast<EVERYTHING_IPC_QUERY2W *>(malloc(allocSize));
+        auto *queryStruct = static_cast<EVERYTHING_IPC_QUERYW *>(malloc(allocSize));
         if (!queryStruct) return;
 
         ZeroMemory(queryStruct, allocSize);
         queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
-        queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LIST2W;
+        queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
         queryStruct->search_flags = 0;
         queryStruct->offset = 0;
         queryStruct->max_results = 1000;
-        queryStruct->request_flags = EVERYTHING_IPC_QUERY2_REQUEST_NAME
-                                   | EVERYTHING_IPC_QUERY2_REQUEST_PATH
-                                   | EVERYTHING_IPC_QUERY2_REQUEST_SIZE
-                                   | EVERYTHING_IPC_QUERY2_REQUEST_DATE_MODIFIED;
-        queryStruct->sort_type = 0;
         memcpy(queryStruct->search_string, wquery.c_str(), querySize);
 
         COPYDATASTRUCT cds;
-        cds.dwData = EVERYTHING_IPC_COPYDATA_QUERY2W;
+        cds.dwData = EVERYTHING_IPC_COPYDATA_QUERYW;
         cds.cbData = static_cast<DWORD>(allocSize);
         cds.lpData = queryStruct;
 
