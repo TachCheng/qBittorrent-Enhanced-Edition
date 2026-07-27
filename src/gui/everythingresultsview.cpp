@@ -82,20 +82,30 @@ void EverythingResultsView::updateSearchQuery(const QString &query)
 void EverythingResultsView::onSearchCompleted(const QString &query, const QList<EverythingItem> &results, int totalMatches)
 {
     Q_UNUSED(query);
+    m_treeWidget->setUpdatesEnabled(false);
+    m_treeWidget->setSortingEnabled(false);
     m_treeWidget->clear();
     m_statusLabel->setText(tr("找到 %1 個相符項目 (共 %2 個)").arg(results.size()).arg(totalMatches));
 
+    QList<QTreeWidgetItem *> treeItems;
+    treeItems.reserve(results.size());
+
     for (const EverythingItem &item : results)
     {
-        auto *treeItem = new QTreeWidgetItem(m_treeWidget);
+        auto *treeItem = new QTreeWidgetItem();
         treeItem->setText(0, item.name);
         treeItem->setText(1, item.path);
-        treeItem->setText(2, Utils::Misc::friendlyUnit(item.size));
+        treeItem->setText(2, (item.size > 0) ? Utils::Misc::friendlyUnit(item.size) : QString{});
         treeItem->setText(3, item.dateModified.isValid() ? item.dateModified.toString(QStringLiteral("yyyy/MM/dd hh:mm")) : QString{});
 
         const QString fullPath = item.path.isEmpty() ? item.name : QDir::toNativeSeparators(QDir(item.path).filePath(item.name));
         treeItem->setData(0, Qt::UserRole, fullPath);
+        treeItems.append(treeItem);
     }
+
+    m_treeWidget->addTopLevelItems(treeItems);
+    m_treeWidget->setSortingEnabled(true);
+    m_treeWidget->setUpdatesEnabled(true);
 }
 
 void EverythingResultsView::onItemDoubleClicked(QTreeWidgetItem *item, int column)

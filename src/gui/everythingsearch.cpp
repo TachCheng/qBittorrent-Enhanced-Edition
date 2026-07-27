@@ -198,19 +198,6 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
                 dataPtr += sizeof(FILETIME);
             }
 
-            // Fallback to local disk if item size is 0 and path exists
-            if ((item.size == 0) && !item.name.isEmpty())
-            {
-                const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
-                QFileInfo fi(fullPath);
-                if (fi.exists() && fi.isFile())
-                {
-                    item.size = static_cast<qulonglong>(fi.size());
-                    if (!item.dateModified.isValid())
-                        item.dateModified = fi.lastModified();
-                }
-            }
-
             results.append(item);
         }
     }
@@ -231,15 +218,6 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
 
             item.name = QString::fromWCharArray(namePtr);
             item.path = QString::fromWCharArray(pathPtr);
-
-            const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
-            QFileInfo fi(fullPath);
-            if (fi.exists() && fi.isFile())
-            {
-                item.size = static_cast<qulonglong>(fi.size());
-                item.dateModified = fi.lastModified();
-            }
-
             results.append(item);
         }
     }
@@ -366,7 +344,7 @@ void EverythingSearch::search(const QString &query)
         queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LIST2W;
         queryStruct->search_flags = 0;
         queryStruct->offset = 0;
-        queryStruct->max_results = 100000;
+        queryStruct->max_results = 1000;
         queryStruct->request_flags = EVERYTHING_IPC_QUERY2_REQUEST_NAME
                                    | EVERYTHING_IPC_QUERY2_REQUEST_PATH
                                    | EVERYTHING_IPC_QUERY2_REQUEST_SIZE
