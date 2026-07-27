@@ -12,11 +12,61 @@
 #include <QAction>
 #include <QGuiApplication>
 #include <QClipboard>
-#include <QFile>
 
+#include "base/preferences.h"
 #include "base/utils/misc.h"
 #include "base/path.h"
 #include "gui/utils.h"
+
+namespace
+{
+    class EverythingTreeItem final : public QTreeWidgetItem
+    {
+    public:
+        explicit EverythingTreeItem(const EverythingItem &item)
+            : m_size(item.size)
+            , m_dateModified(item.dateModified)
+            , m_isFolder(item.isFolder)
+        {
+            setText(0, item.name);
+            setText(1, item.path);
+            setText(2, (item.size > 0) ? Utils::Misc::friendlyUnit(item.size) : QString{});
+            setText(3, item.dateModified.isValid() ? item.dateModified.toString(QStringLiteral("yyyy/MM/dd hh:mm")) : QString{});
+
+            const QString fullPath = item.path.isEmpty() ? item.name : QDir::toNativeSeparators(QDir(item.path).filePath(item.name));
+            setData(0, Qt::UserRole, fullPath);
+        }
+
+        bool operator<(const QTreeWidgetItem &other) const override
+        {
+            const int col = treeWidget() ? treeWidget()->sortColumn() : 0;
+            const auto *otherItem = dynamic_cast<const EverythingTreeItem *>(&other);
+
+            if (col == 2) // Size column
+            {
+                if (otherItem && (m_isFolder != otherItem->m_isFolder))
+                {
+                    const Qt::SortOrder order = treeWidget() ? treeWidget()->header()->sortIndicatorOrder() : Qt::AscendingOrder;
+                    return (order == Qt::AscendingOrder) ? (!m_isFolder) : (m_isFolder);
+                }
+                if (otherItem)
+                    return m_size < otherItem->m_size;
+            }
+            else if (col == 3) // Date column
+            {
+                if (otherItem)
+                    return m_dateModified < otherItem->m_dateModified;
+            }
+
+            return QTreeWidgetItem::operator<(other);
+        }
+
+    private:
+        qulonglong m_size = 0;
+        QDateTime m_dateModified;
+        bool m_isFolder = false;
+    };
+}
 
 EverythingResultsView::EverythingResultsView(QWidget *parent)
     : QWidget(parent)
@@ -46,6 +96,19 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
     m_treeWidget->header()->resizeSection(3, 120);
     m_treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     mainLayout->addWidget(m_treeWidget);
+
+    // Restore sort settings from Preferences
+    Preferences *pref = Preferences::instance();
+    const int sortCol = pref->value(QStringLiteral("EverythingResultsView/sortColumn"), 2).toInt();
+    const Qt::SortOrder sortOrder = static_cast<Qt::SortOrder>(pref->value(QStringLiteral("EverythingResultsView/sortOrder"), static_cast<int>(Qt::DescendingOrder)).toInt());
+    m_treeWidget->header()->setSortIndicator(sortCol, sortOrder);
+
+    connect(m_treeWidget->header(), &QHeaderView::sortIndicatorChanged, this, [](int logicalIndex, Qt::SortOrder order)
+    {
+        Preferences *pref = Preferences::instance();
+        pref->setValue(QStringLiteral("EverythingResultsView/sortColumn"), logicalIndex);
+        pref->setValue(QStringLiteral("EverythingResultsView/sortOrder"), static_cast<int>(order));
+    });
 
     m_everythingSearch = new EverythingSearch(this);
     connect(m_everythingSearch, &EverythingSearch::searchCompleted, this, &EverythingResultsView::onSearchCompleted);
@@ -92,19 +155,16 @@ void EverythingResultsView::onSearchCompleted(const QString &query, const QList<
 
     for (const EverythingItem &item : results)
     {
-        auto *treeItem = new QTreeWidgetItem();
-        treeItem->setText(0, item.name);
-        treeItem->setText(1, item.path);
-        treeItem->setText(2, (item.size > 0) ? Utils::Misc::friendlyUnit(item.size) : QString{});
-        treeItem->setText(3, item.dateModified.isValid() ? item.dateModified.toString(QStringLiteral("yyyy/MM/dd hh:mm")) : QString{});
-
-        const QString fullPath = item.path.isEmpty() ? item.name : QDir::toNativeSeparators(QDir(item.path).filePath(item.name));
-        treeItem->setData(0, Qt::UserRole, fullPath);
-        treeItems.append(treeItem);
+        treeItems.append(new EverythingTreeItem(item));
     }
 
     m_treeWidget->addTopLevelItems(treeItems);
+
+    const int sortCol = m_treeWidget->header()->sortIndicatorSection();
+    const Qt::SortOrder sortOrder = m_treeWidget->header()->sortIndicatorOrder();
+
     m_treeWidget->setSortingEnabled(true);
+    m_treeWidget->sortByColumn(sortCol, sortOrder);
     m_treeWidget->setUpdatesEnabled(true);
 }
 

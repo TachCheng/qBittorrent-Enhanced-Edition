@@ -145,6 +145,7 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
 
             const auto *item1 = reinterpret_cast<const EVERYTHING_IPC_ITEMW *>(itemPtr);
             EverythingItem item;
+            item.isFolder = (i < numFolders);
 
             if (item1->name_offset > 0 && item1->name_offset < cbData)
             {

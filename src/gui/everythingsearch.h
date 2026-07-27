@@ -15,6 +15,7 @@ struct EverythingItem
     QString path;
     qulonglong size = 0;
     QDateTime dateModified;
+    bool isFolder = false;
 };
 
 Q_DECLARE_METATYPE(EverythingItem)
