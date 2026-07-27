@@ -99,15 +99,15 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
 
     // Restore sort settings from Preferences
     Preferences *pref = Preferences::instance();
-    const int sortCol = pref->value(QStringLiteral("EverythingResultsView/sortColumn"), 2).toInt();
-    const Qt::SortOrder sortOrder = static_cast<Qt::SortOrder>(pref->value(QStringLiteral("EverythingResultsView/sortOrder"), static_cast<int>(Qt::DescendingOrder)).toInt());
+    const int sortCol = pref->getEverythingSortColumn();
+    const Qt::SortOrder sortOrder = static_cast<Qt::SortOrder>(pref->getEverythingSortOrder());
     m_treeWidget->header()->setSortIndicator(sortCol, sortOrder);
 
     connect(m_treeWidget->header(), &QHeaderView::sortIndicatorChanged, this, [](int logicalIndex, Qt::SortOrder order)
     {
         Preferences *pref = Preferences::instance();
-        pref->setValue(QStringLiteral("EverythingResultsView/sortColumn"), logicalIndex);
-        pref->setValue(QStringLiteral("EverythingResultsView/sortOrder"), static_cast<int>(order));
+        pref->setEverythingSortColumn(logicalIndex);
+        pref->setEverythingSortOrder(static_cast<int>(order));
     });
 
     m_everythingSearch = new EverythingSearch(this);

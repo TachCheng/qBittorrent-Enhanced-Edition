@@ -2257,6 +2257,26 @@ bool Preferences::getMigrateStatus() const
     return value(u"Preferences/General/MigrateStatus"_s, false);
 }
 
+int Preferences::getEverythingSortColumn() const
+{
+    return value(u"EverythingResultsView/SortColumn"_s, 2);
+}
+
+void Preferences::setEverythingSortColumn(const int col)
+{
+    setValue(u"EverythingResultsView/SortColumn"_s, col);
+}
+
+int Preferences::getEverythingSortOrder() const
+{
+    return value(u"EverythingResultsView/SortOrder"_s, static_cast<int>(Qt::DescendingOrder));
+}
+
+void Preferences::setEverythingSortOrder(const int order)
+{
+    setValue(u"EverythingResultsView/SortOrder"_s, order);
+}
+
 void Preferences::apply()
 {
     if (SettingsStorage::instance()->save())

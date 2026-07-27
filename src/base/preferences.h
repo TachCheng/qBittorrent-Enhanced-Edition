@@ -470,6 +470,11 @@ public:
     void setMigrateStatus(bool enabled);
     bool getMigrateStatus() const;
 
+    int getEverythingSortColumn() const;
+    void setEverythingSortColumn(int col);
+    int getEverythingSortOrder() const;
+    void setEverythingSortOrder(int order);
+
 public slots:
     void setStatusFilterState(bool checked);
     void setCategoryFilterState(bool checked);
