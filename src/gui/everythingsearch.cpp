@@ -132,15 +132,19 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
             ? (basePtr + list->offset)
             : reinterpret_cast<const char *>(list->items);
 
+        const char *baseEnd = basePtr + cbData;
         for (DWORD i = 0; i < list->numitems; ++i)
         {
             const char *itemPtr = itemsStart + (i * sizeof(EVERYTHING_IPC_ITEM2W));
-            if (itemPtr + sizeof(EVERYTHING_IPC_ITEM2W) > basePtr + cbData)
+            if (itemPtr + sizeof(EVERYTHING_IPC_ITEM2W) > baseEnd)
                 break;
 
             const auto *item2 = reinterpret_cast<const EVERYTHING_IPC_ITEM2W *>(itemPtr);
-            const char *dataPtr = itemPtr + item2->data_offset;
-            if ((dataPtr < basePtr) || (dataPtr >= basePtr + cbData))
+            const char *dataPtr = (item2->data_offset >= sizeof(EVERYTHING_IPC_LIST2W))
+                ? (basePtr + item2->data_offset)
+                : (itemPtr + item2->data_offset);
+
+            if ((dataPtr < basePtr) || (dataPtr >= baseEnd))
                 continue;
 
             EverythingItem item;
@@ -148,19 +152,29 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
 
             if (req & EVERYTHING_IPC_QUERY2_REQUEST_NAME)
             {
-                const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
-                item.name = QString::fromWCharArray(wstr);
-                dataPtr += (wcslen(wstr) + 1) * sizeof(wchar_t);
+                if (dataPtr + sizeof(wchar_t) <= baseEnd)
+                {
+                    const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
+                    const size_t maxWChars = (baseEnd - dataPtr) / sizeof(wchar_t);
+                    const size_t len = wcsnlen(wstr, maxWChars);
+                    item.name = QString::fromWCharArray(wstr, static_cast<int>(len));
+                    dataPtr += (len + 1) * sizeof(wchar_t);
+                }
             }
             if (req & EVERYTHING_IPC_QUERY2_REQUEST_PATH)
             {
-                const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
-                item.path = QString::fromWCharArray(wstr);
-                dataPtr += (wcslen(wstr) + 1) * sizeof(wchar_t);
+                if (dataPtr + sizeof(wchar_t) <= baseEnd)
+                {
+                    const auto *wstr = reinterpret_cast<const wchar_t *>(dataPtr);
+                    const size_t maxWChars = (baseEnd - dataPtr) / sizeof(wchar_t);
+                    const size_t len = wcsnlen(wstr, maxWChars);
+                    item.path = QString::fromWCharArray(wstr, static_cast<int>(len));
+                    dataPtr += (len + 1) * sizeof(wchar_t);
+                }
             }
             if (req & EVERYTHING_IPC_QUERY2_REQUEST_SIZE)
             {
-                if (dataPtr + sizeof(LARGE_INTEGER) <= basePtr + cbData)
+                if (dataPtr + sizeof(LARGE_INTEGER) <= baseEnd)
                 {
                     LARGE_INTEGER sz;
                     memcpy(&sz, dataPtr, sizeof(LARGE_INTEGER));
@@ -170,7 +184,7 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
             }
             if (req & EVERYTHING_IPC_QUERY2_REQUEST_DATE_MODIFIED)
             {
-                if (dataPtr + sizeof(FILETIME) <= basePtr + cbData)
+                if (dataPtr + sizeof(FILETIME) <= baseEnd)
                 {
                     FILETIME ft;
                     memcpy(&ft, dataPtr, sizeof(FILETIME));
@@ -283,15 +297,21 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
             const COPYDATASTRUCT *cds = reinterpret_cast<const COPYDATASTRUCT *>(lParam);
             if (cds && (cds->dwData == EVERYTHING_IPC_COPYDATA_LIST2W || cds->dwData == EVERYTHING_IPC_COPYDATA_LISTW))
             {
-                int totalMatches = 0;
-                const QList<EverythingItem> results = parseResponseBuffer(
-                    static_cast<quintptr>(cds->dwData),
-                    cds->lpData,
-                    static_cast<quint32>(cds->cbData),
-                    totalMatches
-                );
+                try
+                {
+                    int totalMatches = 0;
+                    const QList<EverythingItem> results = parseResponseBuffer(
+                        static_cast<quintptr>(cds->dwData),
+                        cds->lpData,
+                        static_cast<quint32>(cds->cbData),
+                        totalMatches
+                    );
 
-                emit self->searchCompleted(self->m_currentQuery, results, totalMatches);
+                    emit self->searchCompleted(self->m_currentQuery, results, totalMatches);
+                }
+                catch (...)
+                {
+                }
                 return TRUE;
             }
         }
