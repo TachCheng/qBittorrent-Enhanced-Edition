@@ -146,9 +146,9 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
             const auto *item1 = reinterpret_cast<const EVERYTHING_IPC_ITEMW *>(itemPtr);
             EverythingItem item;
 
-            if (item1->filename_offset > 0 && item1->filename_offset < cbData)
+            if (item1->name_offset > 0 && item1->name_offset < cbData)
             {
-                const char *namePtr = basePtr + item1->filename_offset;
+                const char *namePtr = basePtr + item1->name_offset;
                 if (namePtr + sizeof(wchar_t) <= baseEnd)
                 {
                     const auto *wstr = reinterpret_cast<const wchar_t *>(namePtr);
