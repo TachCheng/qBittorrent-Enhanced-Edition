@@ -475,6 +475,9 @@ public:
     int getEverythingSortOrder() const;
     void setEverythingSortOrder(int order);
 
+    QByteArray getEverythingHeaderState() const;
+    void setEverythingHeaderState(const QByteArray &state);
+
 public slots:
     void setStatusFilterState(bool checked);
     void setCategoryFilterState(bool checked);

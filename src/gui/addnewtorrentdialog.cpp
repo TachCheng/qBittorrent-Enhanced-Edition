@@ -342,16 +342,17 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
         m_filterLine->selectAll();
     });
 
-    loadState();
-
-    resize(1350, 750);
-    const QList<int> currentSizes = m_ui->splitter->sizes();
-    if ((currentSizes.size() < 3) || (currentSizes[2] < 350))
-        m_ui->splitter->setSizes({360, 540, 450});
-
     m_ui->splitter->setStretchFactor(0, 0);
     m_ui->splitter->setStretchFactor(1, 3);
     m_ui->splitter->setStretchFactor(2, 2);
+
+    loadState();
+
+    if (!m_storeDialogSize.get().isValid())
+        resize(1350, 750);
+
+    if (m_storeSplitterState.get().isEmpty())
+        m_ui->splitter->setSizes({360, 540, 450});
 
     if (const QByteArray state = m_storeTreeHeaderState; !state.isEmpty())
         m_ui->contentTreeView->header()->restoreState(state);

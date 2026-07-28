@@ -90,15 +90,23 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
     m_treeWidget = new QTreeWidget(this);
     m_treeWidget->setHeaderLabels({tr("名稱"), tr("路徑"), tr("大小"), tr("修改日期")});
     m_treeWidget->setSortingEnabled(true);
-    m_treeWidget->header()->resizeSection(0, 220);
-    m_treeWidget->header()->resizeSection(1, 240);
-    m_treeWidget->header()->resizeSection(2, 70);
-    m_treeWidget->header()->resizeSection(3, 120);
+    // Restore sort settings and column layout from Preferences
+    Preferences *pref = Preferences::instance();
+    const QByteArray headerState = pref->getEverythingHeaderState();
+    if (!headerState.isEmpty())
+    {
+        m_treeWidget->header()->restoreState(headerState);
+    }
+    else
+    {
+        m_treeWidget->header()->resizeSection(0, 220);
+        m_treeWidget->header()->resizeSection(1, 240);
+        m_treeWidget->header()->resizeSection(2, 70);
+        m_treeWidget->header()->resizeSection(3, 120);
+    }
     m_treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     mainLayout->addWidget(m_treeWidget);
 
-    // Restore sort settings from Preferences
-    Preferences *pref = Preferences::instance();
     const int sortCol = pref->getEverythingSortColumn();
     const Qt::SortOrder sortOrder = static_cast<Qt::SortOrder>(pref->getEverythingSortOrder());
     m_treeWidget->header()->setSortIndicator(sortCol, sortOrder);
@@ -108,6 +116,12 @@ EverythingResultsView::EverythingResultsView(QWidget *parent)
         Preferences *pref = Preferences::instance();
         pref->setEverythingSortColumn(logicalIndex);
         pref->setEverythingSortOrder(static_cast<int>(order));
+    });
+
+    connect(m_treeWidget->header(), &QHeaderView::sectionResized, this, [this](int, int, int)
+    {
+        Preferences *pref = Preferences::instance();
+        pref->setEverythingHeaderState(m_treeWidget->header()->saveState());
     });
 
     m_everythingSearch = new EverythingSearch(this);

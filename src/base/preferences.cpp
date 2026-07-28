@@ -2277,6 +2277,16 @@ void Preferences::setEverythingSortOrder(const int order)
     setValue(u"EverythingResultsView/SortOrder"_s, order);
 }
 
+QByteArray Preferences::getEverythingHeaderState() const
+{
+    return value(u"EverythingResultsView/HeaderState"_s, QByteArray{});
+}
+
+void Preferences::setEverythingHeaderState(const QByteArray &state)
+{
+    setValue(u"EverythingResultsView/HeaderState"_s, state);
+}
+
 void Preferences::apply()
 {
     if (SettingsStorage::instance()->save())
