@@ -102,6 +102,7 @@ private:
     void setContentFilterPattern();
     void setupCustomSizeSelectMenu();
     void triggerEverythingSearch();
+    void connectTreeViewModelSignals();
 
     Ui::AddNewTorrentDialog *m_ui = nullptr;
     std::unique_ptr<TorrentContentAdaptor> m_contentAdaptor;

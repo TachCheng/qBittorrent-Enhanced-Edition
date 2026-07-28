@@ -734,6 +734,7 @@ void AddNewTorrentDialog::contentLayoutChanged()
     const auto contentLayout = static_cast<BitTorrent::TorrentContentLayout>(m_ui->contentLayoutComboBox->currentIndex());
     m_contentAdaptor->applyContentLayout(contentLayout);
     m_ui->contentTreeView->setContentHandler(m_contentAdaptor.get()); // to cause reloading
+    connectTreeViewModelSignals();
 }
 
 void AddNewTorrentDialog::saveTorrentFile()
@@ -999,6 +1000,7 @@ void AddNewTorrentDialog::setupTreeview()
     }
 
     m_ui->contentTreeView->setContentHandler(m_contentAdaptor.get());
+    connectTreeViewModelSignals();
 
     m_filterLine->blockSignals(false);
 
@@ -1141,4 +1143,13 @@ void AddNewTorrentDialog::triggerEverythingSearch()
         const QString query = queryParts.join(u" | "_s);
         m_ui->everythingResultsView->updateSearchQuery(query);
     });
+}
+
+void AddNewTorrentDialog::connectTreeViewModelSignals()
+{
+    if (auto *m = m_ui->contentTreeView->model())
+    {
+        connect(m, &QAbstractItemModel::dataChanged, this, &AddNewTorrentDialog::triggerEverythingSearch, Qt::UniqueConnection);
+        connect(m, &QAbstractItemModel::modelReset, this, &AddNewTorrentDialog::triggerEverythingSearch, Qt::UniqueConnection);
+    }
 }
