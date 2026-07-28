@@ -413,6 +413,7 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
         m_ui->contentTreeView->select200MB();
         triggerEverythingSearch();
     });
+    connect(m_ui->contentTreeView, &TorrentContentWidget::stateChanged, this, &AddNewTorrentDialog::triggerEverythingSearch);
     connect(Preferences::instance(), &Preferences::changed, this, []
     {
         const int length = Preferences::instance()->addNewTorrentDialogSavePathHistoryLength();
@@ -1076,26 +1077,68 @@ void AddNewTorrentDialog::triggerEverythingSearch()
         if (!m_ui || !m_ui->everythingResultsView)
             return;
 
-        QString query;
-        if (m_currentContext)
-            query = m_currentContext->torrentDescr.name();
-
-        if (query.trimmed().isEmpty())
-            return;
-
-        // Clean query string (remove file extension)
-        const int lastDot = query.lastIndexOf(u'.');
-        if (lastDot > 0 && lastDot > query.length() - 5)
-            query = query.left(lastDot);
-
-        // Extract core keyword e.g. "JUR-647CX" -> "jur 647"
+        QSet<QString> keywordsSet;
         static const QRegularExpression codeRegex(QStringLiteral("([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"));
-        const QRegularExpressionMatch match = codeRegex.match(query);
-        if (match.hasMatch())
+
+        if (m_contentAdaptor)
         {
-            query = match.captured(1) + QLatin1Char(' ') + match.captured(2);
+            const QList<BitTorrent::DownloadPriority> priorities = m_contentAdaptor->filePriorities();
+            const PathList filePaths = m_contentAdaptor->filePaths();
+
+            const int count = std::min(priorities.size(), filePaths.size());
+            for (int i = 0; i < count; ++i)
+            {
+                if (priorities[i] == BitTorrent::DownloadPriority::Ignored)
+                    continue;
+
+                QString fileName = filePaths[i].filename();
+                if (fileName.isEmpty())
+                    continue;
+
+                const int lastDot = fileName.lastIndexOf(u'.');
+                if (lastDot > 0 && lastDot > fileName.length() - 5)
+                    fileName = fileName.left(lastDot);
+
+                const QRegularExpressionMatch match = codeRegex.match(fileName);
+                if (match.hasMatch())
+                {
+                    keywordsSet.insert(match.captured(1) + QLatin1Char(' ') + match.captured(2));
+                }
+                else if (!fileName.trimmed().isEmpty())
+                {
+                    keywordsSet.insert(fileName.trimmed());
+                }
+            }
         }
 
+        // Fallback to torrent title if no checked files produced keywords
+        if (keywordsSet.isEmpty() && m_currentContext)
+        {
+            QString title = m_currentContext->torrentDescr.name();
+            const int lastDot = title.lastIndexOf(u'.');
+            if (lastDot > 0 && lastDot > title.length() - 5)
+                title = title.left(lastDot);
+
+            const QRegularExpressionMatch match = codeRegex.match(title);
+            if (match.hasMatch())
+                keywordsSet.insert(match.captured(1) + QLatin1Char(' ') + match.captured(2));
+            else if (!title.trimmed().isEmpty())
+                keywordsSet.insert(title.trimmed());
+        }
+
+        if (keywordsSet.isEmpty())
+            return;
+
+        QStringList queryParts;
+        for (const QString &kw : keywordsSet)
+        {
+            if (kw.contains(QLatin1Char(' ')))
+                queryParts.append(u"<"_s + kw + u">"_s);
+            else
+                queryParts.append(kw);
+        }
+
+        const QString query = queryParts.join(u" | "_s);
         m_ui->everythingResultsView->updateSearchQuery(query);
     });
 }
