@@ -13,7 +13,10 @@
 #include <QGuiApplication>
 #include <QClipboard>
 
+#include <QMessageBox>
+
 #include "base/preferences.h"
+#include "base/utils/fs.h"
 #include "base/utils/misc.h"
 #include "base/path.h"
 #include "gui/utils.h"
@@ -242,9 +245,41 @@ void EverythingResultsView::onTreeContextMenuRequested(const QPoint &pos)
     }
     else if (selectedAction == actDelete)
     {
-        if (QFile::moveToTrash(fullPath))
+        const QFileInfo fi(fullPath);
+        if (!fi.exists())
         {
             delete item;
+            return;
         }
+
+        bool deleted = QFile::moveToTrash(fullPath);
+        if (!deleted && !fi.exists())
+            deleted = true;
+
+        if (!deleted)
+        {
+            // UNC paths / Mapped Network Drives (e.g. M:\ or \\server\share) do not support Recycle Bin in Windows
+            const QMessageBox::StandardButton button = QMessageBox::warning(
+                this,
+                tr("刪除確認"),
+                tr("無法將此項目移至資源回收桶（網路磁碟機或 UNC 路徑不支援回收桶）。\n\n是否要永久刪除此%1？\n%2")
+                    .arg(fi.isDir() ? tr("資料夾") : tr("檔案"), fullPath),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No);
+
+            if (button == QMessageBox::Yes)
+            {
+                if (fi.isDir())
+                    Utils::Fs::removeDirRecursively(Path(fullPath));
+                else
+                    Utils::Fs::removeFile(Path(fullPath));
+
+                if (!QFileInfo::exists(fullPath))
+                    deleted = true;
+            }
+        }
+
+        if (deleted)
+            delete item;
     }
 }
