@@ -54,6 +54,21 @@ private slots:
         QCOMPARE(Utils::Misc::friendlyUnitCompact(15000000), (u"14.3" + QChar::Nbsp + u"M"));
         QCOMPARE(Utils::Misc::friendlyUnitCompact(10000000000), (u"9.31" + QChar::Nbsp + u"G"));
     }
+
+    void testExtractReleaseCode() const
+    {
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("dx5c.xyzAKDL-363CX.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("hhd800.com@AKDL-363CX.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("[ThZu.Cc]AKDL-363CX.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("www.jav.com_AKDL-363.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("AKDL-363CX.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("akdl-363.mp4")), QStringLiteral("AKDL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("WAAA-637.mp4")), QStringLiteral("WAAA 637"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("MIDA-532.mp4")), QStringLiteral("MIDA 532"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("JUR-647.mp4")), QStringLiteral("JUR 647"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-PPV-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
+    }
 };
 
 QTEST_APPLESS_MAIN(TestUtilsMisc)

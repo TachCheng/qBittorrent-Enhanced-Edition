@@ -33,6 +33,7 @@
 
 #include <QDialog>
 #include <QElapsedTimer>
+#include <QTimer>
 
 #include "base/path.h"
 #include "base/settingvalue.h"
@@ -102,8 +103,10 @@ private:
     void setContentFilterPattern();
     void setupCustomSizeSelectMenu();
     void triggerEverythingSearch();
+    void doEverythingSearch();
     void connectTreeViewModelSignals();
 
+    QTimer m_everythingSearchTimer;
     Ui::AddNewTorrentDialog *m_ui = nullptr;
     std::unique_ptr<TorrentContentAdaptor> m_contentAdaptor;
     int m_savePathIndex = -1;

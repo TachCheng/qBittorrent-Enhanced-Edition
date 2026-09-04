@@ -342,6 +342,9 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
         m_filterLine->selectAll();
     });
 
+    m_everythingSearchTimer.setSingleShot(true);
+    connect(&m_everythingSearchTimer, &QTimer::timeout, this, &AddNewTorrentDialog::doEverythingSearch);
+
     m_ui->splitter->setStretchFactor(0, 0);
     m_ui->splitter->setStretchFactor(1, 3);
     m_ui->splitter->setStretchFactor(2, 2);
@@ -1075,75 +1078,61 @@ void AddNewTorrentDialog::triggerEverythingSearch()
     if (!m_ui || !m_ui->everythingResultsView)
         return;
 
-    QTimer::singleShot(150, this, [this]()
+    m_everythingSearchTimer.start(250);
+}
+
+void AddNewTorrentDialog::doEverythingSearch()
+{
+    if (!m_ui || !m_ui->everythingResultsView)
+        return;
+
+    QSet<QString> keywordsSet;
+
+    if (m_contentAdaptor)
     {
-        if (!m_ui || !m_ui->everythingResultsView)
-            return;
+        const QList<BitTorrent::DownloadPriority> priorities = m_contentAdaptor->filePriorities();
+        const PathList filePaths = m_contentAdaptor->filePaths();
 
-        QSet<QString> keywordsSet;
-        static const QRegularExpression codeRegex(QStringLiteral("([a-zA-Z]{2,5})[-_\\s]?(\\d{3,5})"));
-
-        if (m_contentAdaptor)
+        const int count = std::min(priorities.size(), filePaths.size());
+        for (int i = 0; i < count; ++i)
         {
-            const QList<BitTorrent::DownloadPriority> priorities = m_contentAdaptor->filePriorities();
-            const PathList filePaths = m_contentAdaptor->filePaths();
+            if (priorities[i] == BitTorrent::DownloadPriority::Ignored)
+                continue;
 
-            const int count = std::min(priorities.size(), filePaths.size());
-            for (int i = 0; i < count; ++i)
-            {
-                if (priorities[i] == BitTorrent::DownloadPriority::Ignored)
-                    continue;
-
-                QString fileName = filePaths[i].filename();
-                if (fileName.isEmpty())
-                    continue;
-
-                const int lastDot = fileName.lastIndexOf(u'.');
-                if (lastDot > 0 && lastDot > fileName.length() - 5)
-                    fileName = fileName.left(lastDot);
-
-                const QRegularExpressionMatch match = codeRegex.match(fileName);
-                if (match.hasMatch())
-                {
-                    keywordsSet.insert(match.captured(1) + QLatin1Char(' ') + match.captured(2));
-                }
-                else if (!fileName.trimmed().isEmpty())
-                {
-                    keywordsSet.insert(fileName.trimmed());
-                }
-            }
+            const QString fileName = filePaths[i].filename();
+            const QString code = Utils::Misc::extractReleaseCode(fileName);
+            if (!code.isEmpty())
+                keywordsSet.insert(code);
+            else if (!fileName.trimmed().isEmpty())
+                keywordsSet.insert(fileName.trimmed());
         }
+    }
 
-        // Fallback to torrent title if no checked files produced keywords
-        if (keywordsSet.isEmpty() && m_currentContext)
-        {
-            QString title = m_currentContext->torrentDescr.name();
-            const int lastDot = title.lastIndexOf(u'.');
-            if (lastDot > 0 && lastDot > title.length() - 5)
-                title = title.left(lastDot);
+    // Fallback to torrent title if no checked files produced keywords
+    if (keywordsSet.isEmpty() && m_currentContext)
+    {
+        const QString title = m_currentContext->torrentDescr.name();
+        const QString code = Utils::Misc::extractReleaseCode(title);
+        if (!code.isEmpty())
+            keywordsSet.insert(code);
+        else if (!title.trimmed().isEmpty())
+            keywordsSet.insert(title.trimmed());
+    }
 
-            const QRegularExpressionMatch match = codeRegex.match(title);
-            if (match.hasMatch())
-                keywordsSet.insert(match.captured(1) + QLatin1Char(' ') + match.captured(2));
-            else if (!title.trimmed().isEmpty())
-                keywordsSet.insert(title.trimmed());
-        }
+    if (keywordsSet.isEmpty())
+        return;
 
-        if (keywordsSet.isEmpty())
-            return;
+    QStringList queryParts;
+    for (const QString &kw : keywordsSet)
+    {
+        if (kw.contains(QLatin1Char(' ')))
+            queryParts.append(u"<"_s + kw + u">"_s);
+        else
+            queryParts.append(kw);
+    }
 
-        QStringList queryParts;
-        for (const QString &kw : keywordsSet)
-        {
-            if (kw.contains(QLatin1Char(' ')))
-                queryParts.append(u"<"_s + kw + u">"_s);
-            else
-                queryParts.append(kw);
-        }
-
-        const QString query = queryParts.join(u" | "_s);
-        m_ui->everythingResultsView->updateSearchQuery(query);
-    });
+    const QString query = queryParts.join(u" | "_s);
+    m_ui->everythingResultsView->updateSearchQuery(query);
 }
 
 void AddNewTorrentDialog::connectTreeViewModelSignals()

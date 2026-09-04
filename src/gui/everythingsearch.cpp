@@ -2,6 +2,10 @@
 
 #include <QtGlobal>
 #include <QThreadPool>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QTimer>
+#include <QMetaObject>
 #include <QDir>
 #include <QFileInfo>
 
@@ -171,15 +175,6 @@ QList<EverythingItem> EverythingSearch::parseResponseBuffer(quintptr dwData, con
                 }
             }
 
-            const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
-            QFileInfo fi(fullPath);
-            if (fi.exists())
-            {
-                if (fi.isFile())
-                    item.size = static_cast<qulonglong>(fi.size());
-                item.dateModified = fi.lastModified();
-            }
-
             results.append(item);
         }
     }
@@ -240,14 +235,40 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                 try
                 {
                     int totalMatches = 0;
-                    const QList<EverythingItem> results = parseResponseBuffer(
+                    QList<EverythingItem> results = parseResponseBuffer(
                         static_cast<quintptr>(cds->dwData),
                         cds->lpData,
                         static_cast<quint32>(cds->cbData),
                         totalMatches
                     );
 
-                    emit self->searchCompleted(self->m_currentQuery, results, totalMatches);
+                    const QString query = self->m_currentQuery;
+                    const quint64 currentId = self->m_searchId;
+
+                    // Offload file size & timestamp checks to background thread pool
+                    // to prevent blocking the GUI thread when hundreds of files exist (especially on network drives)
+                    QThreadPool::globalInstance()->start([self, query, results, totalMatches, currentId]() mutable
+                    {
+                        for (auto &item : results)
+                        {
+                            const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
+                            const QFileInfo fi(fullPath);
+                            if (fi.exists())
+                            {
+                                if (fi.isFile())
+                                    item.size = static_cast<qulonglong>(fi.size());
+                                item.dateModified = fi.lastModified();
+                            }
+                        }
+
+                        QMetaObject::invokeMethod(self, [self, query, results, totalMatches, currentId]()
+                        {
+                            if (self->m_searchId == currentId)
+                            {
+                                emit self->searchCompleted(query, results, totalMatches);
+                            }
+                        });
+                    });
                 }
                 catch (...)
                 {
@@ -271,7 +292,9 @@ bool EverythingSearch::isAvailable() const
 
 void EverythingSearch::search(const QString &query)
 {
+    const quint64 searchId = ++m_searchId;
     m_currentQuery = query;
+
     if (query.trimmed().isEmpty())
     {
         emit searchCompleted(query, {}, 0);
@@ -289,17 +312,43 @@ void EverythingSearch::search(const QString &query)
     if (!m_hwnd)
         createNativeWindow();
 
-    if (!m_hwnd) return;
+    if (!m_hwnd)
+    {
+        emit searchCompleted(query, {}, 0);
+        return;
+    }
 
     const HWND receiverHwnd = m_hwnd;
-    QThreadPool::globalInstance()->start([query, hwnd, receiverHwnd]()
+
+    // Watchdog timer: If Everything does not reply within 5 seconds,
+    // emit empty results so UI does not stay stuck at "Searching..."
+    QTimer::singleShot(5000, this, [this, searchId, query]()
     {
+        if (m_searchId == searchId)
+        {
+            emit searchCompleted(query, {}, 0);
+        }
+    });
+
+    static QMutex s_everythingIpcMutex;
+    QThreadPool::globalInstance()->start([this, query, hwnd, receiverHwnd, searchId]()
+    {
+        QMutexLocker locker(&s_everythingIpcMutex);
+
         const std::wstring wquery = query.toStdWString();
         const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
         const size_t allocSize = sizeof(EVERYTHING_IPC_QUERYW) + querySize;
 
         auto *queryStruct = static_cast<EVERYTHING_IPC_QUERYW *>(malloc(allocSize));
-        if (!queryStruct) return;
+        if (!queryStruct)
+        {
+            QMetaObject::invokeMethod(this, [this, searchId, query]()
+            {
+                if (m_searchId == searchId)
+                    emit searchCompleted(query, {}, 0);
+            });
+            return;
+        }
 
         ZeroMemory(queryStruct, allocSize);
         queryStruct->reply_hwnd = static_cast<DWORD>(reinterpret_cast<uintptr_t>(receiverHwnd));
@@ -315,8 +364,18 @@ void EverythingSearch::search(const QString &query)
         cds.lpData = queryStruct;
 
         DWORD_PTR sendResult = 0;
-        SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(receiverHwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 3000, &sendResult);
+        const LRESULT lres = SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(receiverHwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 5000, &sendResult);
         free(queryStruct);
+
+        if (lres == 0)
+        {
+            // SendMessageTimeoutW failed or timed out
+            QMetaObject::invokeMethod(this, [this, searchId, query]()
+            {
+                if (m_searchId == searchId)
+                    emit searchCompleted(query, {}, 0);
+            });
+        }
     });
 #else
     emit searchCompleted(query, {}, 0);

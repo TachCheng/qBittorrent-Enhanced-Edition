@@ -85,4 +85,6 @@ namespace Utils::Misc
     QString userFriendlyDuration(qlonglong seconds, qlonglong maxCap = -1, TimeResolution resolution = TimeResolution::Minutes);
 
     QString languageToLocalizedString(QStringView localeStr);
+
+    QString extractReleaseCode(const QString &text);
 }

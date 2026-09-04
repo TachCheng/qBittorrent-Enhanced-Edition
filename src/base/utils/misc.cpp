@@ -461,3 +461,56 @@ QString Utils::Misc::zlibVersionString()
     static const auto version {QString::fromLatin1(zlibVersion())};
     return version;
 }
+
+QString Utils::Misc::extractReleaseCode(const QString &text)
+{
+    if (text.isEmpty())
+        return {};
+
+    QString clean = text;
+
+    // 1. Strip file extension if present (e.g. .mp4, .mkv)
+    const int lastDot = clean.lastIndexOf(u'.');
+    if (lastDot > 0 && lastDot > clean.length() - 6)
+        clean = clean.left(lastDot);
+
+    // 2. Strip URLs, domain names, website watermarks (e.g. dx5c.xyz, hhd800.com@, www.jav.com_)
+    static const QRegularExpression domainRegex(
+        QStringLiteral(R"((?i)(?:https?://)?(?:www\.)?[a-z0-9_\-\.]+\.(?:com|net|org|xyz|top|cc|me|club|tv|vip|site|online|icu|app|art|biz|info|pro|work|pw|link|moe|live|asia|wiki|co|io|in|to|is|cx|la|ws|im)[@_\-\s]*)")
+    );
+    clean.remove(domainRegex);
+
+    // 3. Strip bracketed tags (e.g. [1080p], 【FHD】, [ThZu.Cc])
+    static const QRegularExpression bracketRegex(
+        QStringLiteral(R"(\[[^\]]*\]|\([^\)]*\)|【[^】]*】)")
+    );
+    clean.remove(bracketRegex);
+
+    // 4. Check for FC2 release codes (e.g. FC2-PPV-1234567, FC2-1234567)
+    static const QRegularExpression fc2Regex(
+        QStringLiteral(R"((?i)(?<![a-zA-Z])FC2[-_\s]?(?:PPV[-_\s]?)?(\d{5,7}))")
+    );
+    const QRegularExpressionMatch fc2Match = fc2Regex.match(clean);
+    if (fc2Match.hasMatch())
+    {
+        return QStringLiteral("FC2 PPV ") + fc2Match.captured(1);
+    }
+
+    // 5. Separate camelCase / lowercase-to-uppercase transitions (e.g. "xyzAKDL" -> "xyz AKDL")
+    static const QRegularExpression camelCaseRegex(
+        QStringLiteral(R"((?<=[a-z])(?=[A-Z]))")
+    );
+    clean.replace(camelCaseRegex, QStringLiteral(" "));
+
+    // 6. Match standard release code (2-5 letters followed by 3-5 digits)
+    static const QRegularExpression codeRegex(
+        QStringLiteral(R"((?i)(?<![a-zA-Z])([a-zA-Z]{2,5})[-_\s]?(\d{3,5}))")
+    );
+    const QRegularExpressionMatch match = codeRegex.match(clean);
+    if (match.hasMatch())
+    {
+        return match.captured(1).toUpper() + QLatin1Char(' ') + match.captured(2);
+    }
+
+    return clean.trimmed();
+}
