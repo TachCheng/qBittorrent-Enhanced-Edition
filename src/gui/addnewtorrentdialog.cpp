@@ -429,6 +429,7 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
 
 AddNewTorrentDialog::~AddNewTorrentDialog()
 {
+    m_everythingSearchTimer.stop();
     delete m_ui;
 }
 

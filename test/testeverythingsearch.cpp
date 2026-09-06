@@ -84,6 +84,45 @@ private slots:
         QCOMPARE(results[0].path, QStringLiteral("C:\\Downloads"));
 #endif
     }
+
+    void testRapidCreationAndDestruction()
+    {
+        // Verify that rapidly creating and destroying EverythingSearch instances
+        // with pending searches does not crash or access dangling pointers
+        for (int i = 0; i < 20; ++i)
+        {
+            auto *searcher = new EverythingSearch();
+            searcher->search(QStringLiteral("AKDL 363"));
+            delete searcher;
+        }
+    }
+
+    void testMultipleConcurrentSearchesAndDestruction()
+    {
+        // Verify that opening multiple searchers concurrently and destroying them
+        // at staggered times is completely safe and leak-free
+        QList<EverythingSearch *> searchers;
+        searchers.reserve(10);
+        for (int i = 0; i < 10; ++i)
+        {
+            auto *s = new EverythingSearch();
+            searchers.append(s);
+            s->search(QStringLiteral("WAAA ") + QString::number(i));
+        }
+
+        // Delete half immediately
+        for (int i = 0; i < 5; ++i)
+        {
+            delete searchers.takeFirst();
+        }
+
+        // Process any queued events
+        QTest::qWait(50);
+
+        // Delete remaining
+        qDeleteAll(searchers);
+        searchers.clear();
+    }
 };
 
 QTEST_MAIN(TestEverythingSearch)

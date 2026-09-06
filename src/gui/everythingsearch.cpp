@@ -2,12 +2,12 @@
 
 #include <QtGlobal>
 #include <QThreadPool>
-#include <QMutex>
-#include <QMutexLocker>
 #include <QTimer>
 #include <QMetaObject>
 #include <QDir>
 #include <QFileInfo>
+#include <QPointer>
+#include <QCoreApplication>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -88,6 +88,16 @@ struct EVERYTHING_IPC_LIST2W
 
 namespace
 {
+    QThreadPool *everythingThreadPool()
+    {
+        static QThreadPool pool;
+        static const bool initialized = []() {
+            pool.setMaxThreadCount(1);
+            return true;
+        }();
+        return &pool;
+    }
+
     HWND getEverythingHwnd()
     {
         HWND hwnd = FindWindowW(L"EVERYTHING_TASKBAR_NOTIFICATION", nullptr);
@@ -110,6 +120,9 @@ EverythingSearch::EverythingSearch(QObject *parent)
 
 EverythingSearch::~EverythingSearch()
 {
+    if (m_activeSearchState)
+        m_activeSearchState->cancelled.store(true);
+
 #ifdef Q_OS_WIN
     destroyNativeWindow();
 #endif
@@ -244,13 +257,21 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
 
                     const QString query = self->m_currentQuery;
                     const quint64 currentId = self->m_searchId;
+                    const auto taskState = self->m_activeSearchState;
+                    QPointer<EverythingSearch> safeThis(self);
 
-                    // Offload file size & timestamp checks to background thread pool
+                    // Offload file size & timestamp checks to dedicated thread pool
                     // to prevent blocking the GUI thread when hundreds of files exist (especially on network drives)
-                    QThreadPool::globalInstance()->start([self, query, results, totalMatches, currentId]() mutable
+                    everythingThreadPool()->start([safeThis, taskState, query, results, totalMatches, currentId]() mutable
                     {
+                        if (taskState && taskState->cancelled.load())
+                            return;
+
                         for (auto &item : results)
                         {
+                            if (taskState && taskState->cancelled.load())
+                                return;
+
                             const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
                             const QFileInfo fi(fullPath);
                             if (fi.exists())
@@ -261,11 +282,17 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                             }
                         }
 
-                        QMetaObject::invokeMethod(self, [self, query, results, totalMatches, currentId]()
+                        if (taskState && taskState->cancelled.load())
+                            return;
+
+                        QMetaObject::invokeMethod(qApp, [safeThis, taskState, query, results, totalMatches, currentId]()
                         {
-                            if (self->m_searchId == currentId)
+                            if (!safeThis || (taskState && taskState->cancelled.load()))
+                                return;
+
+                            if (safeThis->m_searchId == currentId)
                             {
-                                emit self->searchCompleted(query, results, totalMatches);
+                                emit safeThis->searchCompleted(query, results, totalMatches);
                             }
                         });
                     });
@@ -292,6 +319,11 @@ bool EverythingSearch::isAvailable() const
 
 void EverythingSearch::search(const QString &query)
 {
+    if (m_activeSearchState)
+        m_activeSearchState->cancelled.store(true);
+    m_activeSearchState = std::make_shared<SearchTaskState>();
+    const auto taskState = m_activeSearchState;
+
     const quint64 searchId = ++m_searchId;
     m_currentQuery = query;
 
@@ -319,21 +351,22 @@ void EverythingSearch::search(const QString &query)
     }
 
     const HWND receiverHwnd = m_hwnd;
+    QPointer<EverythingSearch> safeThis(this);
 
     // Watchdog timer: If Everything does not reply within 5 seconds,
     // emit empty results so UI does not stay stuck at "Searching..."
-    QTimer::singleShot(5000, this, [this, searchId, query]()
+    QTimer::singleShot(5000, this, [safeThis, taskState, searchId, query]()
     {
-        if (m_searchId == searchId)
+        if (safeThis && !taskState->cancelled.load() && (safeThis->m_searchId == searchId))
         {
-            emit searchCompleted(query, {}, 0);
+            emit safeThis->searchCompleted(query, {}, 0);
         }
     });
 
-    static QMutex s_everythingIpcMutex;
-    QThreadPool::globalInstance()->start([this, query, hwnd, receiverHwnd, searchId]()
+    everythingThreadPool()->start([safeThis, taskState, query, hwnd, receiverHwnd, searchId]()
     {
-        QMutexLocker locker(&s_everythingIpcMutex);
+        if (taskState->cancelled.load())
+            return;
 
         const std::wstring wquery = query.toStdWString();
         const size_t querySize = (wquery.length() + 1) * sizeof(wchar_t);
@@ -342,10 +375,10 @@ void EverythingSearch::search(const QString &query)
         auto *queryStruct = static_cast<EVERYTHING_IPC_QUERYW *>(malloc(allocSize));
         if (!queryStruct)
         {
-            QMetaObject::invokeMethod(this, [this, searchId, query]()
+            QMetaObject::invokeMethod(qApp, [safeThis, taskState, searchId, query]()
             {
-                if (m_searchId == searchId)
-                    emit searchCompleted(query, {}, 0);
+                if (safeThis && !taskState->cancelled.load() && (safeThis->m_searchId == searchId))
+                    emit safeThis->searchCompleted(query, {}, 0);
             });
             return;
         }
@@ -355,7 +388,7 @@ void EverythingSearch::search(const QString &query)
         queryStruct->reply_copydata_message = EVERYTHING_IPC_COPYDATA_LISTW;
         queryStruct->search_flags = 0;
         queryStruct->offset = 0;
-        queryStruct->max_results = 1000;
+        queryStruct->max_results = 100;
         memcpy(queryStruct->search_string, wquery.c_str(), querySize);
 
         COPYDATASTRUCT cds;
@@ -370,10 +403,10 @@ void EverythingSearch::search(const QString &query)
         if (lres == 0)
         {
             // SendMessageTimeoutW failed or timed out
-            QMetaObject::invokeMethod(this, [this, searchId, query]()
+            QMetaObject::invokeMethod(qApp, [safeThis, taskState, searchId, query]()
             {
-                if (m_searchId == searchId)
-                    emit searchCompleted(query, {}, 0);
+                if (safeThis && !taskState->cancelled.load() && (safeThis->m_searchId == searchId))
+                    emit safeThis->searchCompleted(query, {}, 0);
             });
         }
     });
