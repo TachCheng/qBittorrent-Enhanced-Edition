@@ -512,5 +512,5 @@ QString Utils::Misc::extractReleaseCode(const QString &text)
         return match.captured(1).toUpper() + QLatin1Char(' ') + match.captured(2);
     }
 
-    return clean.trimmed();
+    return {};
 }

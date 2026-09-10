@@ -1087,7 +1087,24 @@ void AddNewTorrentDialog::doEverythingSearch()
     if (!m_ui || !m_ui->everythingResultsView)
         return;
 
-    QSet<QString> keywordsSet;
+    QSet<QString> releaseCodes;
+    QString largestMediaFilename;
+    qlonglong largestMediaSize = 0;
+
+    static const QStringList ignoredExtensions = {
+        u".url"_s, u".txt"_s, u".nfo"_s, u".exe"_s, u".lnk"_s,
+        u".torrent"_s, u".jpg"_s, u".jpeg"_s, u".png"_s, u".bmp"_s,
+        u".gif"_s, u".ico"_s, u".srt"_s, u".ass"_s, u".sub"_s, u".vtt"_s
+    };
+
+    auto isIgnoredExt = [](const QString &name) -> bool {
+        for (const QString &ext : ignoredExtensions)
+        {
+            if (name.endsWith(ext, Qt::CaseInsensitive))
+                return true;
+        }
+        return false;
+    };
 
     if (m_contentAdaptor)
     {
@@ -1103,21 +1120,61 @@ void AddNewTorrentDialog::doEverythingSearch()
             const QString fileName = filePaths[i].filename();
             const QString code = Utils::Misc::extractReleaseCode(fileName);
             if (!code.isEmpty())
-                keywordsSet.insert(code);
-            else if (!fileName.trimmed().isEmpty())
-                keywordsSet.insert(fileName.trimmed());
+            {
+                releaseCodes.insert(code);
+            }
+            else if (!isIgnoredExt(fileName))
+            {
+                const qlonglong sz = m_contentAdaptor->fileSize(i);
+                if (sz > largestMediaSize)
+                {
+                    largestMediaSize = sz;
+                    largestMediaFilename = fileName;
+                }
+            }
         }
     }
 
-    // Fallback to torrent title if no checked files produced keywords
-    if (keywordsSet.isEmpty() && m_currentContext)
+    QSet<QString> keywordsSet;
+    if (!releaseCodes.isEmpty())
     {
-        const QString title = m_currentContext->torrentDescr.name();
-        const QString code = Utils::Misc::extractReleaseCode(title);
-        if (!code.isEmpty())
-            keywordsSet.insert(code);
-        else if (!title.trimmed().isEmpty())
-            keywordsSet.insert(title.trimmed());
+        keywordsSet = releaseCodes;
+    }
+    else
+    {
+        // Fallback 1: Try extract release code from torrent title
+        if (m_currentContext)
+        {
+            const QString title = m_currentContext->torrentDescr.name();
+            const QString code = Utils::Misc::extractReleaseCode(title);
+            if (!code.isEmpty())
+                keywordsSet.insert(code);
+        }
+
+        // Fallback 2: Use largest checked non-auxiliary media filename
+        if (keywordsSet.isEmpty() && !largestMediaFilename.isEmpty())
+        {
+            QString clean = largestMediaFilename;
+            const int lastDot = clean.lastIndexOf(u'.');
+            if (lastDot > 0)
+                clean = clean.left(lastDot);
+            static const QRegularExpression bracketRegex(QStringLiteral(R"(\[[^\]]*\]|\([^\)]*\)|【[^】]*】)"));
+            clean.remove(bracketRegex);
+            clean = clean.trimmed();
+            if (!clean.isEmpty())
+                keywordsSet.insert(clean);
+        }
+
+        // Fallback 3: Clean torrent title
+        if (keywordsSet.isEmpty() && m_currentContext)
+        {
+            QString clean = m_currentContext->torrentDescr.name();
+            static const QRegularExpression bracketRegex(QStringLiteral(R"(\[[^\]]*\]|\([^\)]*\)|【[^】]*】)"));
+            clean.remove(bracketRegex);
+            clean = clean.trimmed();
+            if (!clean.isEmpty())
+                keywordsSet.insert(clean);
+        }
     }
 
     if (keywordsSet.isEmpty())
@@ -1126,11 +1183,26 @@ void AddNewTorrentDialog::doEverythingSearch()
     QStringList queryParts;
     for (const QString &kw : keywordsSet)
     {
-        if (kw.contains(QLatin1Char(' ')))
-            queryParts.append(u"<"_s + kw + u">"_s);
+        QString sanitized = kw;
+        sanitized.replace(QLatin1Char('['), QString())
+                 .replace(QLatin1Char(']'), QString())
+                 .replace(QLatin1Char('!'), QString())
+                 .replace(QLatin1Char('|'), QString())
+                 .replace(QLatin1Char('<'), QString())
+                 .replace(QLatin1Char('>'), QString());
+        sanitized = sanitized.trimmed();
+
+        if (sanitized.isEmpty())
+            continue;
+
+        if (sanitized.contains(QLatin1Char(' ')))
+            queryParts.append(u"<"_s + sanitized + u">"_s);
         else
-            queryParts.append(kw);
+            queryParts.append(sanitized);
     }
+
+    if (queryParts.isEmpty())
+        return;
 
     const QString query = queryParts.join(u" | "_s);
     m_ui->everythingResultsView->updateSearchQuery(query);

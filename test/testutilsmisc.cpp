@@ -68,6 +68,17 @@ private slots:
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("JUR-647.mp4")), QStringLiteral("JUR 647"));
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-PPV-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
+
+        // MKV format release codes
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("ADKL-363.mkv")), QStringLiteral("ADKL 363"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("[7.25GB]ADKL-363 4K.mkv")), QStringLiteral("ADKL 363"));
+
+        // Non-release-code files must return empty string, NOT raw text
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("readme.txt")), QString());
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("cover.jpg")), QString());
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("1.jpg")), QString());
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("promo.url")), QString());
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("Downloaded_from_site.txt")), QString());
     }
 };
 

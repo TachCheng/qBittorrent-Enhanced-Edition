@@ -27,11 +27,6 @@ class EverythingSearch final : public QObject
     Q_OBJECT
 
 public:
-    struct SearchTaskState
-    {
-        std::atomic<bool> cancelled {false};
-    };
-
     explicit EverythingSearch(QObject *parent = nullptr);
     ~EverythingSearch() override;
 
@@ -46,7 +41,6 @@ signals:
 private:
     QString m_currentQuery;
     quint64 m_searchId = 0;
-    std::shared_ptr<SearchTaskState> m_activeSearchState;
 #ifdef Q_OS_WIN
     HWND m_hwnd = nullptr;
     static LRESULT CALLBACK staticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

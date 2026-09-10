@@ -644,40 +644,74 @@ void TorrentContentModel::selectMaxMp4()
     if (!m_contentHandler || !m_contentHandler->hasMetadata() || m_filesIndex.isEmpty())
         return;
 
-    TorrentContentModelFile *maxMp4File = nullptr;
+    TorrentContentModelFile *maxMediaFile = nullptr;
     qulonglong maxSize = 0;
+
+    static const QStringList videoExtensions = {
+        u".mp4"_s, u".mkv"_s, u".avi"_s, u".wmv"_s, u".mov"_s,
+        u".flv"_s, u".ts"_s, u".m2ts"_s, u".m4v"_s, u".webm"_s,
+        u".iso"_s, u".rmvb"_s, u".vob"_s
+    };
+
+    auto isVideoFile = [](const QString &name) -> bool {
+        for (const QString &ext : videoExtensions)
+        {
+            if (name.endsWith(ext, Qt::CaseInsensitive))
+                return true;
+        }
+        return false;
+    };
 
     for (TorrentContentModelFile *file : m_filesIndex)
     {
-        if (file->name().endsWith(u".mp4", Qt::CaseInsensitive))
+        if (isVideoFile(file->name()))
         {
             if (file->size() > maxSize)
             {
                 maxSize = file->size();
-                maxMp4File = file;
+                maxMediaFile = file;
             }
         }
     }
 
-    for (TorrentContentModelFile *file : m_filesIndex)
+    // Fallback: If no video file was found, select the largest file overall
+    if (!maxMediaFile)
     {
-        if (file == maxMp4File)
-            file->setPriority(BitTorrent::DownloadPriority::Normal);
-        else
-            file->setPriority(BitTorrent::DownloadPriority::Ignored);
+        for (TorrentContentModelFile *file : m_filesIndex)
+        {
+            if (file->size() > maxSize)
+            {
+                maxSize = file->size();
+                maxMediaFile = file;
+            }
+        }
     }
 
-    m_contentHandler->prioritizeFiles(getFilePriorities());
-
-    m_rootItem->recalculateProgress();
-    m_rootItem->recalculateAvailability();
-
-    const QList<ColumnInterval> columns =
+    if (maxMediaFile)
     {
-        {TorrentContentModelItem::COL_NAME, TorrentContentModelItem::COL_NAME},
-        {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
-    };
-    notifySubtreeUpdated(index(0, 0), columns);
+        for (TorrentContentModelFile *file : m_filesIndex)
+        {
+            if (file == maxMediaFile)
+                file->setPriority(BitTorrent::DownloadPriority::Normal);
+            else
+                file->setPriority(BitTorrent::DownloadPriority::Ignored);
+        }
+
+        m_contentHandler->prioritizeFiles(getFilePriorities());
+
+        m_rootItem->recalculateProgress();
+        m_rootItem->recalculateAvailability();
+
+        const QList<ColumnInterval> columns =
+        {
+            {TorrentContentModelItem::COL_NAME, TorrentContentModelItem::COL_NAME},
+            {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
+        };
+
+        const int topLevelCount = rowCount();
+        for (int r = 0; r < topLevelCount; ++r)
+            notifySubtreeUpdated(index(r, 0), columns);
+    }
 }
 
 void TorrentContentModel::selectGreaterThanSize(qulonglong minSizeBytes)
@@ -703,7 +737,10 @@ void TorrentContentModel::selectGreaterThanSize(qulonglong minSizeBytes)
         {TorrentContentModelItem::COL_NAME, TorrentContentModelItem::COL_NAME},
         {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO}
     };
-    notifySubtreeUpdated(index(0, 0), columns);
+
+    const int topLevelCount = rowCount();
+    for (int r = 0; r < topLevelCount; ++r)
+        notifySubtreeUpdated(index(r, 0), columns);
 }
 
 void TorrentContentModel::select200MB()
@@ -729,7 +766,10 @@ void TorrentContentModel::refresh()
             {TorrentContentModelItem::COL_PRIO, TorrentContentModelItem::COL_PRIO},
             {TorrentContentModelItem::COL_AVAILABILITY, TorrentContentModelItem::COL_AVAILABILITY}
         };
-        notifySubtreeUpdated(index(0, 0), columns);
+
+        const int topLevelCount = rowCount();
+        for (int r = 0; r < topLevelCount; ++r)
+            notifySubtreeUpdated(index(r, 0), columns);
     }
     else
     {

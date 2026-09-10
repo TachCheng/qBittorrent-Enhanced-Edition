@@ -123,6 +123,14 @@ private slots:
         qDeleteAll(searchers);
         searchers.clear();
     }
+
+    void testDuplicateQuerySuppression()
+    {
+        EverythingSearch searcher;
+        searcher.search(QStringLiteral("ADKL 363"));
+        // Immediate second call with identical query should be safely ignored and not cancel in-flight search
+        searcher.search(QStringLiteral("ADKL 363"));
+    }
 };
 
 QTEST_MAIN(TestEverythingSearch)
