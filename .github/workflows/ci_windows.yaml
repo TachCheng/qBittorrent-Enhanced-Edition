@@ -61,13 +61,12 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', (process.env.ACTIONS_CACHE_URL || ''));
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', (process.env.ACTIONS_RUNTIME_TOKEN || ''));
 
-      - name: Cache vcpkg installed
-        uses: actions/cache@v4
+      - name: Restore vcpkg installed
+        uses: actions/cache/restore@v4
         id: cache-vcpkg
         with:
           path: c:/vcpkg/installed
           key: vcpkg-installed-${{ matrix.config.arch }}-v1
-          save-always: true
 
       - name: Install dependencies with vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -98,15 +97,21 @@ jobs:
             --overlay-triplets="${{ env.vcpkg_path }}/triplets_overlay" `
             $packages
 
-      - name: Cache Boost and Libtorrent
-        uses: actions/cache@v4
+      - name: Save vcpkg installed
+        uses: actions/cache/save@v4
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        with:
+          path: c:/vcpkg/installed
+          key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
+
+      - name: Restore Boost and Libtorrent
+        uses: actions/cache/restore@v4
         id: cache-deps
         with:
           path: |
             ${{ env.boost_path }}
             ${{ env.libtorrent_path }}/install
           key: deps-boost-${{ matrix.libtorrent.boost_minor_version }}-lt-${{ matrix.libtorrent.version }}-${{ matrix.config.arch }}
-          save-always: true
 
       - name: Install boost
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -165,6 +170,15 @@ jobs:
             -DVCPKG_TARGET_TRIPLET=${{ matrix.config.arch }}-windows-static-md-release
           cmake --build build
           cmake --install build
+
+      - name: Save Boost and Libtorrent
+        uses: actions/cache/save@v4
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ${{ env.boost_path }}
+            ${{ env.libtorrent_path }}/install
+          key: ${{ steps.cache-deps.outputs.cache-primary-key }}
 
       - name: Build qBittorrent
         run: |
