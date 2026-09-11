@@ -29,8 +29,6 @@ jobs:
           qt_arch: win64_msvc2022_64
 
     env:
-      boost_path: "${{ runner.workspace }}/boost"
-      libtorrent_path: "${{ runner.workspace }}/libtorrent"
       vcpkg_path: "c:/vcpkg"
 
     steps:
@@ -38,6 +36,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      - name: Set environment paths
+        run: |
+          Add-Content -Path $env:GITHUB_ENV -Value "boost_path=${{ runner.workspace }}/boost"
+          Add-Content -Path $env:GITHUB_ENV -Value "libtorrent_path=${{ runner.workspace }}/libtorrent"
 
       - name: Setup devcmd
         uses: TheMrMilchmann/setup-msvc-dev@v4
