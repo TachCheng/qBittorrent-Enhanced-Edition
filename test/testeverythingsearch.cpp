@@ -1,5 +1,6 @@
 #include <QTest>
 #include <QDateTime>
+#include <QSignalSpy>
 #include "gui/everythingsearch.h"
 
 #ifdef Q_OS_WIN
@@ -130,6 +131,41 @@ private slots:
         searcher.search(QStringLiteral("ADKL 363"));
         // Immediate second call with identical query should be safely ignored and not cancel in-flight search
         searcher.search(QStringLiteral("ADKL 363"));
+    }
+
+    void testRequeryAfterSearchCompleted()
+    {
+        EverythingSearch searcher;
+        QSignalSpy spy(&searcher, &EverythingSearch::searchCompleted);
+
+        // Immediate duplicate search when in-flight must be suppressed (only 1 search initiated)
+        searcher.search(QStringLiteral("ADKL 363"));
+        searcher.search(QStringLiteral("ADKL 363"));
+
+        // Wait for search to complete
+        spy.wait(6000);
+        const int countAfterFirst = spy.count();
+        QVERIFY(countAfterFirst >= 1);
+
+        // Now that the search has finished, sending the SAME query again (e.g. user pressed Enter)
+        // MUST NOT be suppressed and must trigger a fresh search
+        searcher.search(QStringLiteral("ADKL 363"));
+        QVERIFY2(spy.wait(6000), "Search with same query after completion was incorrectly blocked!");
+        QCOMPARE(spy.count(), countAfterFirst + 1);
+    }
+
+    void testNoWatchdogWipeout()
+    {
+        EverythingSearch searcher;
+        QSignalSpy spy(&searcher, &EverythingSearch::searchCompleted);
+
+        searcher.search(QStringLiteral("SNOS 374"));
+        QVERIFY(spy.wait(6000));
+        const int countInitial = spy.count();
+
+        // Wait an additional 6 seconds to ensure no un-cancellable single-shot timer fires and wipes out results
+        QTest::qWait(6000);
+        QCOMPARE(spy.count(), countInitial);
     }
 };
 

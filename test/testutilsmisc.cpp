@@ -68,6 +68,7 @@ private slots:
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("JUR-647.mp4")), QStringLiteral("JUR 647"));
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-PPV-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("FC2-1234567.mp4")), QStringLiteral("FC2 PPV 1234567"));
+        QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("SNOS-374-UC.mp4")), QStringLiteral("SNOS 374"));
 
         // MKV format release codes
         QCOMPARE(Utils::Misc::extractReleaseCode(QStringLiteral("ADKL-363.mkv")), QStringLiteral("ADKL 363"));

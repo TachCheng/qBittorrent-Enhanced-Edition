@@ -41,6 +41,7 @@ signals:
 private:
     QString m_currentQuery;
     quint64 m_searchId = 0;
+    std::atomic<bool> m_isSearching {false};
 #ifdef Q_OS_WIN
     HWND m_hwnd = nullptr;
     static LRESULT CALLBACK staticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

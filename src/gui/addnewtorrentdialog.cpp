@@ -1195,16 +1195,30 @@ void AddNewTorrentDialog::doEverythingSearch()
         if (sanitized.isEmpty())
             continue;
 
-        if (sanitized.contains(QLatin1Char(' ')))
-            queryParts.append(u"<"_s + sanitized + u">"_s);
-        else
-            queryParts.append(sanitized);
+        queryParts.append(sanitized);
     }
 
     if (queryParts.isEmpty())
         return;
 
-    const QString query = queryParts.join(u" | "_s);
+    QString query;
+    if (queryParts.size() == 1)
+    {
+        query = queryParts.first();
+    }
+    else
+    {
+        QStringList groupedParts;
+        for (const QString &part : queryParts)
+        {
+            if (part.contains(QLatin1Char(' ')))
+                groupedParts.append(u"<"_s + part + u">"_s);
+            else
+                groupedParts.append(part);
+        }
+        query = groupedParts.join(u" | "_s);
+    }
+
     m_ui->everythingResultsView->updateSearchQuery(query);
 }
 

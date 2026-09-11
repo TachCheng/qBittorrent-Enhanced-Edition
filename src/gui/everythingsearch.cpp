@@ -249,7 +249,8 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                     QPointer<EverythingSearch> safeThis(self);
 
                     // Offload file size & timestamp checks to background thread pool
-                    // to prevent blocking the GUI thread when hundreds of files exist (especially on network drives)
+                    // using fast Win32 GetFileAttributesExW to prevent blocking GUI thread
+                    // and minimize network drive / SMB latency.
                     QThreadPool::globalInstance()->start([safeThis, query, results, totalMatches, currentId]() mutable
                     {
                         if (!safeThis || (safeThis->m_searchId != currentId))
@@ -261,12 +262,19 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                                 return;
 
                             const QString fullPath = item.path.isEmpty() ? item.name : QDir(item.path).filePath(item.name);
-                            const QFileInfo fi(fullPath);
-                            if (fi.exists())
+                            const std::wstring wfullPath = fullPath.toStdWString();
+                            WIN32_FILE_ATTRIBUTE_DATA fad;
+                            if (GetFileAttributesExW(wfullPath.c_str(), GetFileExInfoStandard, &fad))
                             {
-                                if (fi.isFile())
-                                    item.size = static_cast<qulonglong>(fi.size());
-                                item.dateModified = fi.lastModified();
+                                if (!(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                                {
+                                    item.size = (static_cast<qulonglong>(fad.nFileSizeHigh) << 32) | fad.nFileSizeLow;
+                                }
+                                ULARGE_INTEGER ull;
+                                ull.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+                                ull.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+                                const qint64 msecs = static_cast<qint64>((ull.QuadPart - 116444736000000000ULL) / 10000);
+                                item.dateModified = QDateTime::fromMSecsSinceEpoch(msecs);
                             }
                         }
 
@@ -277,6 +285,7 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                         {
                             if (safeThis && (safeThis->m_searchId == currentId))
                             {
+                                safeThis->m_isSearching = false;
                                 emit safeThis->searchCompleted(query, results, totalMatches);
                             }
                         });
@@ -284,6 +293,7 @@ LRESULT CALLBACK EverythingSearch::staticWndProc(HWND hwnd, UINT msg, WPARAM wPa
                 }
                 catch (...)
                 {
+                    self->m_isSearching = false;
                     emit self->searchCompleted(self->m_currentQuery, {}, 0);
                 }
                 return TRUE;
@@ -308,15 +318,17 @@ void EverythingSearch::search(const QString &query)
     const QString trimmedQuery = query.trimmed();
     if (trimmedQuery.isEmpty())
     {
+        m_isSearching = false;
         m_currentQuery.clear();
         emit searchCompleted(query, {}, 0);
         return;
     }
 
     // If exact same search query is already active and in flight, do not restart
-    if ((query == m_currentQuery) && (m_searchId > 0))
+    if (m_isSearching && (query == m_currentQuery))
         return;
 
+    m_isSearching = true;
     const quint64 searchId = ++m_searchId;
     m_currentQuery = query;
 
@@ -324,6 +336,7 @@ void EverythingSearch::search(const QString &query)
     HWND hwnd = getEverythingHwnd();
     if (!hwnd)
     {
+        m_isSearching = false;
         emit searchCompleted(query, {}, 0);
         return;
     }
@@ -333,22 +346,13 @@ void EverythingSearch::search(const QString &query)
 
     if (!m_hwnd)
     {
+        m_isSearching = false;
         emit searchCompleted(query, {}, 0);
         return;
     }
 
     const HWND receiverHwnd = m_hwnd;
     QPointer<EverythingSearch> safeThis(this);
-
-    // Watchdog timer: If Everything does not reply within 5 seconds,
-    // emit empty results so UI does not stay stuck at "Searching..."
-    QTimer::singleShot(5000, this, [safeThis, searchId, query]()
-    {
-        if (safeThis && (safeThis->m_searchId == searchId))
-        {
-            emit safeThis->searchCompleted(query, {}, 0);
-        }
-    });
 
     static QMutex s_everythingIpcMutex;
     QThreadPool::globalInstance()->start([safeThis, query, hwnd, receiverHwnd, searchId]()
@@ -371,7 +375,10 @@ void EverythingSearch::search(const QString &query)
             QMetaObject::invokeMethod(qApp, [safeThis, searchId, query]()
             {
                 if (safeThis && (safeThis->m_searchId == searchId))
+                {
+                    safeThis->m_isSearching = false;
                     emit safeThis->searchCompleted(query, {}, 0);
+                }
             });
             return;
         }
@@ -390,7 +397,7 @@ void EverythingSearch::search(const QString &query)
         cds.lpData = queryStruct;
 
         DWORD_PTR sendResult = 0;
-        const LRESULT lres = SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(receiverHwnd), reinterpret_cast<LPARAM>(&cds), SMTO_ABORTIFHUNG, 5000, &sendResult);
+        const LRESULT lres = SendMessageTimeoutW(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(receiverHwnd), reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 5000, &sendResult);
         free(queryStruct);
 
         if (lres == 0)
@@ -399,11 +406,15 @@ void EverythingSearch::search(const QString &query)
             QMetaObject::invokeMethod(qApp, [safeThis, searchId, query]()
             {
                 if (safeThis && (safeThis->m_searchId == searchId))
+                {
+                    safeThis->m_isSearching = false;
                     emit safeThis->searchCompleted(query, {}, 0);
+                }
             });
         }
     });
 #else
+    m_isSearching = false;
     emit searchCompleted(query, {}, 0);
 #endif
 }
