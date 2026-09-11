@@ -29,8 +29,8 @@ jobs:
           qt_arch: win64_msvc2022_64
 
     env:
-      boost_path: "${{ github.workspace }}/../boost"
-      libtorrent_path: "${{ github.workspace }}/../libtorrent"
+      boost_path: "${{ runner.workspace }}/boost"
+      libtorrent_path: "${{ runner.workspace }}/libtorrent"
       vcpkg_path: "c:/vcpkg"
 
     steps:
@@ -62,7 +62,7 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', (process.env.ACTIONS_RUNTIME_TOKEN || ''));
 
       - name: Restore vcpkg installed
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         id: cache-vcpkg
         with:
           path: c:/vcpkg/installed
@@ -98,14 +98,14 @@ jobs:
             $packages
 
       - name: Save vcpkg installed
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         with:
           path: c:/vcpkg/installed
           key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
 
       - name: Restore Boost and Libtorrent
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         id: cache-deps
         with:
           path: |
@@ -119,13 +119,13 @@ jobs:
           $boost_url="https://archives.boost.io/release/${{ matrix.libtorrent.boost_major_version }}.${{ matrix.libtorrent.boost_minor_version }}.${{ matrix.libtorrent.boost_patch_version }}/source/boost_${{ matrix.libtorrent.boost_major_version }}_${{ matrix.libtorrent.boost_minor_version }}_${{ matrix.libtorrent.boost_patch_version }}.tar.gz"
           $boost_url2="https://sourceforge.net/projects/boost/files/boost/${{ matrix.libtorrent.boost_major_version }}.${{ matrix.libtorrent.boost_minor_version }}.${{ matrix.libtorrent.boost_patch_version }}/boost_${{ matrix.libtorrent.boost_major_version }}_${{ matrix.libtorrent.boost_minor_version }}_${{ matrix.libtorrent.boost_patch_version }}.tar.gz"
           curl -L -o "${{ runner.temp }}/boost.tar.gz" "$boost_url"
-          tar -xf "${{ runner.temp }}/boost.tar.gz" -C "${{ github.workspace }}/.."
+          tar -xf "${{ runner.temp }}/boost.tar.gz" -C "${{ runner.workspace }}"
           if ($LastExitCode -ne 0)
           {
             curl -L -o "${{ runner.temp }}/boost.tar.gz" "$boost_url2"
-            tar -xf "${{ runner.temp }}/boost.tar.gz" -C "${{ github.workspace }}/.."
+            tar -xf "${{ runner.temp }}/boost.tar.gz" -C "${{ runner.workspace }}"
           }
-          move "${{ github.workspace }}/../boost_*" "${{ env.boost_path }}"
+          move "${{ runner.workspace }}/boost_*" "${{ env.boost_path }}"
           cd "${{ env.boost_path }}"
           #.\bootstrap.bat
           ${{ env.vcpkg_path }}/installed/${{ matrix.config.arch }}-windows-static-md-release/tools/boost-build/b2.exe `
@@ -172,7 +172,7 @@ jobs:
           cmake --install build
 
       - name: Save Boost and Libtorrent
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         if: steps.cache-deps.outputs.cache-hit != 'true'
         with:
           path: |
