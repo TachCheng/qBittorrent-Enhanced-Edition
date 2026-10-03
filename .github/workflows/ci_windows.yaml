@@ -1,12 +1,27 @@
 name: CI - Windows
 
-on: [pull_request, push]
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'dist/unix/**'
+      - 'dist/macx/**'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'dist/unix/**'
+      - 'dist/macx/**'
 
 permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: ${{ github.head_ref != '' }}
+  cancel-in-progress: true
 
 jobs:
   ci:
