@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2022-2025  Vladimir Golovnev <glassez@yandex.ru>
+ * Copyright (C) 2022-2026  Vladimir Golovnev <glassez@yandex.ru>
  * Copyright (C) 2012  Christophe Dumez <chris@qbittorrent.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -201,7 +201,9 @@ public:
     {
         Q_ASSERT((index >= 0) && (index < filesCount()));
         const Path currentFilePath = filePath(index);
-        if (currentFilePath == newFilePath)
+        // We should compare path in a case sensitive manner even on case insensitive
+        // platforms since it can be renamed by only changing case of some character(s)
+        if (currentFilePath.data() == newFilePath.data())
             return;
 
         if (m_filePaths.isEmpty())
@@ -400,7 +402,7 @@ AddNewTorrentDialog::AddNewTorrentDialog(const BitTorrent::TorrentDescriptor &to
         });
         dlg->open();
     });
-    connect(m_filterLine, &LineEdit::textChanged, this, &AddNewTorrentDialog::setContentFilterPattern);
+    connect(m_filterLine, &LineEdit::textUpdated, this, &AddNewTorrentDialog::setContentFilterPattern);
     connect(m_ui->buttonSelectAll, &QPushButton::clicked, this, [this]() {
         m_ui->contentTreeView->checkAll();
         triggerEverythingSearch();
@@ -926,6 +928,9 @@ void AddNewTorrentDialog::updateMetadata(const BitTorrent::TorrentInfo &metadata
         return;
 
     BitTorrent::TorrentDescriptor &torrentDescr = m_currentContext->torrentDescr;
+    if (torrentDescr.info())
+        return;
+
     Q_ASSERT(metadata.matchesInfoHash(torrentDescr.infoHash()));
     if (!metadata.matchesInfoHash(torrentDescr.infoHash())) [[unlikely]]
         return;

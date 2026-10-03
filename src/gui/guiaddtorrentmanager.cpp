@@ -110,6 +110,9 @@ bool GUIAddTorrentManager::addTorrent(const QString &source, const BitTorrent::A
 
     if (Net::DownloadManager::hasSupportedScheme(source))
     {
+        if (m_downloadedTorrents.contains(source))
+            return true;
+
         LogMsg(tr("Downloading torrent... Source: \"%1\"").arg(source));
         // Launch downloader
         Net::DownloadManager::instance()->download(Net::DownloadRequest(source).limit(pref->getTorrentFileSizeLimit())
@@ -192,11 +195,15 @@ bool GUIAddTorrentManager::processTorrent(const QString &source
     const bool hasMetadata = torrentDescr.info().has_value();
     const BitTorrent::InfoHash infoHash = torrentDescr.infoHash();
 
-    // Bring existing dialog to front if already open for this infoHash
-    if (auto *existingDlg = m_dialogs.value(infoHash))
+    if (AddNewTorrentDialog *dialog = m_dialogs.value(infoHash))
     {
-        existingDlg->activateWindow();
-        existingDlg->raise();
+        if (hasMetadata)
+            dialog->updateMetadata(*torrentDescr.info());
+
+        dialog->setWindowState(dialog->windowState() & ~Qt::WindowMinimized);
+        dialog->show();
+        dialog->activateWindow();
+        dialog->raise();
         return true;
     }
 
